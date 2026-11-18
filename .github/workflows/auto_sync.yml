@@ -24,7 +24,7 @@ jobs:
 
       - name: Pasang pustaka keperluan
         run: |
-          pip install requests beautifulsoup4 sentence-transformers numpy
+          pip install sentence-transformers beautifulsoup4
 
       - name: Tarik data MOF & Jana Vektor AI
         run: |
