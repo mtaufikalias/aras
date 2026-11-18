@@ -2,8 +2,8 @@ name: Kemas Kini Data & Vektor AI ARAS
 
 on:
   schedule:
-    - cron: '0 19 * * *' # Jalan automatik setiap hari jam 3:00 AM waktu Malaysia
-  workflow_dispatch:      # Membolehkan jalan secara manual bila-bila masa
+    - cron: '0 19 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Pasang pustaka keperluan
         run: |
