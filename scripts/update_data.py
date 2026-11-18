@@ -1,37 +1,27 @@
 import json
-import urllib3
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone, timedelta
 from sentence_transformers import SentenceTransformer
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 def load_existing_records():
-    try:
-        with open("data_terkini.json", "r", encoding="utf-8") as f:
-            data = json.load(f)
-        raw_list = data if isinstance(data, list) else data.get("records", data.get("data", []))
-        parsed = []
-        for r in raw_list:
-            if isinstance(r, list) and len(r) >= 4:
-                kat = str(r[1]).strip()
-                sub = str(r[2]).strip()
-                nama = str(r[3]).strip()
-                parsed.append({"kategori": f"{kat} > {sub}", "nama": nama})
-            elif isinstance(r, dict):
-                vals = list(r.values())
-                kat = str(r.get("kategori") or r.get("category") or (vals[1] if len(vals) > 1 else "")).strip()
-                sub = str(r.get("sub_kategori") or r.get("subkategori") or (vals[2] if len(vals) > 2 else "")).strip()
-                nama = str(r.get("nama") or r.get("name") or (vals[3] if len(vals) > 3 else "")).strip()
-                parsed.append({"kategori": f"{kat} > {sub}".strip(" >"), "nama": nama})
-        return parsed
-    except Exception as e:
-        print(f"Ralat membaca data_terkini.json: {e}")
-        return []
+    with open("data_terkini.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    raw_list = data if isinstance(data, list) else data.get("records", data.get("data", []))
+    parsed = []
+    for r in raw_list:
+        if isinstance(r, list) and len(r) >= 4:
+            kat = str(r[1]).strip()
+            sub = str(r[2]).strip()
+            nama = str(r[3]).strip()
+            parsed.append({"kategori": f"{kat} > {sub}", "nama": nama})
+        elif isinstance(r, dict):
+            vals = list(r.values())
+            kat = str(r.get("kategori") or r.get("category") or (vals[1] if len(vals) > 1 else "")).strip()
+            sub = str(r.get("sub_kategori") or r.get("subkategori") or (vals[2] if len(vals) > 2 else "")).strip()
+            nama = str(r.get("nama") or r.get("name") or (vals[3] if len(vals) > 3 else "")).strip()
+            parsed.append({"kategori": f"{kat} > {sub}".strip(" >"), "nama": nama})
+    return parsed
 
 def build_semantic_vectors(records):
-    print("Mengumpul kumpulan kategori unik daripada 170k+ rekod...")
+    print("Mengumpul kumpulan kategori unik daripada rekod...")
     unique_groups = {}
     for r in records:
         kat = r["kategori"]
@@ -43,7 +33,7 @@ def build_semantic_vectors(records):
     texts = [v for _, v in items]
     print(f"Menjana vektor AI untuk {len(texts)} kumpulan pengelasan...")
 
-    model = SentenceTransformer("Xenova/paraphrase-multilingual-MiniLM-L12-v2")
+    model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     embeddings = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
 
     compressed_items = []
