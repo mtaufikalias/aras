@@ -215,7 +215,7 @@
     let semanticVectors = [];
     let embedder = null;
     let currentFilter = 'Semua';
-    let viewMode = 'grid'; // 'grid' | 'list'
+    let viewMode = 'grid';
     let searchTimeout = null;
     let activeModalKod = '';
 
@@ -285,6 +285,8 @@
       return '';
     }
 
+    // Pemetaan tepat berdasarkan susunan sebenar data_terkini.json:
+    // [0]=kod, [1]=nama (cth: KERETA SEDAN), [2]=jenis (cth: ASET_ALIH), [3]=kategori (cth: KENDERAAN), [4]=subKategori, [5]=keterangan, [6]=gambar
     function normalizeRecord(raw) {
       if (Array.isArray(raw)) {
         const kod = String(raw[0] || '').trim();
@@ -297,15 +299,15 @@
         return { kod, nama, jenis, kategori, subKategori, keterangan, gambar };
       }
 
-      const keys = Object.keys(raw || {});
-      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || (keys[0] ? raw[keys[0]] : '') || '').trim();
-      const nama = cleanText(raw.nama || raw.name || raw.jenis_aset || raw.perihal || (keys[1] ? raw[keys[1]] : ''));
-      const rawJenis = raw.jenis || raw.type || raw.kumpulan || (keys[2] ? raw[keys[2]] : '');
+      const vals = Object.values(raw || {});
+      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || vals[0] || '').trim();
+      const nama = cleanText(raw.nama || raw.name || raw.jenis_aset || raw.perihal || vals[1]);
+      const rawJenis = raw.jenis || raw.type || raw.kumpulan || vals[2];
       const jenis = normalizeJenis(rawJenis, kod);
-      const kategori = cleanText(raw.kategori || raw.category || (keys[3] ? raw[keys[3]] : '')) || '-';
-      const subKategori = cleanText(raw.sub_kategori || raw.subkategori || raw.subcategory || (keys[4] ? raw[keys[4]] : '')) || '-';
-      const keterangan = String(raw.keterangan || raw.maklumat || raw.description || raw.desc || (keys[5] ? raw[keys[5]] : '') || '').trim();
-      const rawImg = raw.gambar || raw.image || raw.img || raw.foto || (keys[6] ? raw[keys[6]] : '');
+      const kategori = cleanText(raw.kategori || raw.category || vals[3]) || '-';
+      const subKategori = cleanText(raw.sub_kategori || raw.subkategori || raw.subcategory || vals[4]) || '-';
+      const keterangan = String(raw.keterangan || raw.maklumat || raw.description || raw.desc || vals[5] || '').trim();
+      const rawImg = raw.gambar || raw.image || raw.img || raw.foto || vals[6] || '';
       const gambar = buildImageUrl(rawImg, kod, jenis);
 
       return { kod, nama, jenis, kategori, subKategori, keterangan, gambar };
