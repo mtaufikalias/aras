@@ -1,5 +1,6 @@
 import json
 import re
+import http.cookiejar
 import urllib.request
 import urllib.parse
 from bs4 import BeautifulSoup
@@ -8,49 +9,68 @@ from sentence_transformers import SentenceTransformer
 
 BASE_URL = "https://knowledgebase.treasury.gov.my/kb"
 
-# Setiap subsistem di portal MOF menggunakan fail .cfm dan tajuk DSPTITLE tersendiri
-SUBSYSTEMS = [
-    ("asset.cfm?subsystem_type=asset", "Senarai Klasifikasi Kod Aset Alih", "ASET_ALIH"),
-    ("asset.cfm?subsystem_type=immovable", "Senarai Klasifikasi Kod Aset Tak Alih", "ASET_TAK_ALIH"),
-    ("asset.cfm?subsystem_type=intangible", "Senarai Klasifikasi Kod Aset Tak Ketara", "ASET_TAK_KETARA"),
-    ("stock.cfm?subsystem_type=stock", "Senarai Klasifikasi Kod Stok", "STOK"),
+cj = http.cookiejar.CookieJar()
+opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+opener.addheaders = [
+    ("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"),
+    ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+    ("Accept-Language", "ms-MY,ms;q=0.9,en;q=0.8"),
 ]
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Referer": "https://knowledgebase.treasury.gov.my/kb/index.cfm",
-}
-
-def fetch_html(url, post_data=None):
+def request_page(url, post_data=None, referer=None):
+    headers = {}
+    if referer:
+        headers["Referer"] = referer
     data = urllib.parse.urlencode(post_data).encode("utf-8") if post_data else None
-    req = urllib.request.Request(url, data=data, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=60) as resp:
+    req = urllib.request.Request(url, data=data, headers=headers)
+    with opener.open(req, timeout=60) as resp:
         return resp.read().decode("utf-8", errors="ignore")
 
-def scrape_mof_catalog():
+def scrape_mof_with_session():
     records = []
-    for path, dsp_title, jenis_label in SUBSYSTEMS:
-        try:
-            url = f"{BASE_URL}/{path}"
-            # Hantar DSPTITLE supaya pelayan ColdFusion MOF tidak mengeluarkan ralat 500
-            html = fetch_html(url, {
-                "DSPTITLE": dsp_title,
-                "keyword": "",
-                "txtSearch": "",
-                "btnSearch": "Cari",
-            })
-            soup = BeautifulSoup(html, "html.parser")
+    # Langkah 1: Lawat halaman utama dahulu untuk dapatkan CFID/CFTOKEN (session cookie)
+    try:
+        request_page(f"{BASE_URL}/index.cfm")
+    except Exception as e:
+        print(f"Gagal buka index.cfm: {e}")
+        return []
 
-            for box in soup.select(".product-grid, .item, .thumbnail, .card, td"):
+    targets = [
+        ("asset.cfm?subsystem_type=asset", "ASET_ALIH"),
+        ("asset.cfm?subsystem_type=immovable", "ASET_TAK_ALIH"),
+        ("asset.cfm?subsystem_type=intangible", "ASET_TAK_KETARA"),
+        ("asset.cfm?subsystem_type=stock", "STOK"),
+    ]
+
+    for rel_url, jenis_label in targets:
+        full_url = f"{BASE_URL}/{rel_url}"
+        try:
+            # Lawatan GET dahulu supaya pemboleh ubah DSPTITLE diisytiharkan oleh pelayan ColdFusion
+            get_html = request_page(full_url, referer=f"{BASE_URL}/index.cfm")
+            soup_get = BeautifulSoup(get_html, "html.parser")
+
+            # Ekstrak sebarang input tersembunyi (seperti DSPTITLE) daripada borang sebenar
+            form_payload = {}
+            for inp in soup_get.find_all("input"):
+                name = inp.get("name")
+                if name:
+                    form_payload[name] = inp.get("value", "")
+
+            form_payload["keyword"] = ""
+            form_payload["btnSearch"] = "Cari"
+
+            post_html = request_page(full_url, post_data=form_payload, referer=full_url)
+            soup = BeautifulSoup(post_html, "html.parser")
+
+            for box in soup.select(".product-grid, .item, .thumbnail, .card, div[class*='col-']"):
                 text = box.get_text(" ", strip=True)
                 kod_match = re.search(r"\b(\d{9,16})\b", text)
                 if not kod_match:
                     continue
                 kod = kod_match.group(1)
 
-                img_tag = box.find("img")
                 img_src = ""
+                img_tag = box.find("img")
                 if img_tag and img_tag.get("src"):
                     src = img_tag["src"].strip()
                     if "no_image" not in src.lower() and "no-image" not in src.lower():
@@ -66,16 +86,16 @@ def scrape_mof_catalog():
                 if kod and nama:
                     records.append({
                         "kod": kod,
-                        "nama": nama,
                         "jenis": jenis_label,
                         "kategori": "-",
                         "sub_kategori": "-",
+                        "nama": nama,
                         "keterangan": "",
                         "gambar": img_src,
                     })
-            print(f"Selesai semak {jenis_label}: {len(records)} rekod terkumpul.")
+            print(f"Selesai {jenis_label}: {len(records)} rekod.")
         except Exception as e:
-            print(f"Ralat menarik {jenis_label}: {e}")
+            print(f"Ralat pada {jenis_label}: {e}")
 
     unique = {}
     for r in records:
@@ -94,8 +114,8 @@ def build_vectors(records):
         vals = r if isinstance(r, list) else list(r.values())
         obj = {} if isinstance(r, list) else r
         kat = str(obj.get("kategori") or (vals[2] if len(vals) > 2 else "")).strip()
-        sub = str(obj.get("sub_kategori") or (vals[4] if len(vals) > 4 else "")).strip()
-        nama = str(obj.get("nama") or (vals[5] if len(vals) > 5 else (vals[1] if len(vals) > 1 else ""))).strip()
+        sub = str(obj.get("sub_kategori") or (vals[3] if len(vals) > 3 else "")).strip()
+        nama = str(obj.get("nama") or (vals[4] if len(vals) > 4 else (vals[1] if len(vals) > 1 else ""))).strip()
         key = f"{kat} > {sub}".strip(" >") or nama
         if key and key not in groups:
             groups[key] = f"{sub} | {kat} | {nama}"
@@ -106,7 +126,7 @@ def build_vectors(records):
     return [{"k": k, "v": [round(float(x), 4) for x in embs[i]]} for i, (k, _) in enumerate(items)]
 
 def main():
-    scraped = scrape_mof_catalog()
+    scraped = scrape_mof_with_session()
     if len(scraped) > 1000:
         myt = timezone(timedelta(hours=8))
         now_str = datetime.now(myt).strftime("%d %b %Y, %I:%M %p")
