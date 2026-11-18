@@ -7,16 +7,19 @@ from datetime import datetime, timezone, timedelta
 from sentence_transformers import SentenceTransformer
 
 BASE_URL = "https://knowledgebase.treasury.gov.my/kb"
+
+# Setiap subsistem di portal MOF menggunakan fail .cfm dan tajuk DSPTITLE tersendiri
 SUBSYSTEMS = [
-    ("asset", "ASET_ALIH"),
-    ("immovable", "ASET_TAK_ALIH"),
-    ("intangible", "ASET_TAK_KETARA"),
-    ("stock", "STOK"),
+    ("asset.cfm?subsystem_type=asset", "Senarai Klasifikasi Kod Aset Alih", "ASET_ALIH"),
+    ("asset.cfm?subsystem_type=immovable", "Senarai Klasifikasi Kod Aset Tak Alih", "ASET_TAK_ALIH"),
+    ("asset.cfm?subsystem_type=intangible", "Senarai Klasifikasi Kod Aset Tak Ketara", "ASET_TAK_KETARA"),
+    ("stock.cfm?subsystem_type=stock", "Senarai Klasifikasi Kod Stok", "STOK"),
 ]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Referer": "https://knowledgebase.treasury.gov.my/kb/index.cfm",
 }
 
 def fetch_html(url, post_data=None):
@@ -27,10 +30,16 @@ def fetch_html(url, post_data=None):
 
 def scrape_mof_catalog():
     records = []
-    for sub_param, jenis_label in SUBSYSTEMS:
+    for path, dsp_title, jenis_label in SUBSYSTEMS:
         try:
-            url = f"{BASE_URL}/asset.cfm?subsystem_type={sub_param}"
-            html = fetch_html(url, {"keyword": "", "btnSearch": "Cari"})
+            url = f"{BASE_URL}/{path}"
+            # Hantar DSPTITLE supaya pelayan ColdFusion MOF tidak mengeluarkan ralat 500
+            html = fetch_html(url, {
+                "DSPTITLE": dsp_title,
+                "keyword": "",
+                "txtSearch": "",
+                "btnSearch": "Cari",
+            })
             soup = BeautifulSoup(html, "html.parser")
 
             for box in soup.select(".product-grid, .item, .thumbnail, .card, td"):
@@ -64,10 +73,10 @@ def scrape_mof_catalog():
                         "keterangan": "",
                         "gambar": img_src,
                     })
+            print(f"Selesai semak {jenis_label}: {len(records)} rekod terkumpul.")
         except Exception as e:
-            print(f"Ralat menarik {sub_param}: {e}")
+            print(f"Ralat menarik {jenis_label}: {e}")
 
-    # Nyahduplikasi berdasarkan kod
     unique = {}
     for r in records:
         if r["kod"] not in unique or (r["gambar"] and not unique[r["kod"]]["gambar"]):
