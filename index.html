@@ -143,7 +143,7 @@
       </div>
 
       <div class="p-6 max-h-[75vh] overflow-y-auto">
-        <div class="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-y-3.5 gap-x-4 text-xs sm:text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-[185px_1fr] gap-y-3.5 gap-x-4 text-xs sm:text-sm">
           <div id="modalLabelKod" class="font-bold text-slate-800">Kod Aset:</div>
           <div><span id="modalKod" class="mono font-bold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200"></span></div>
 
@@ -233,51 +233,80 @@
     const dbReadyNote = document.getElementById('dbReadyNote');
     const detailModal = document.getElementById('detailModal');
 
-    // Auto-Kesan Format Array ATAU Objek dalam data_terkini.json
+    // Pemetaan pintar berdasarkan susunan lajur rasmi Knowledgebase MOF
     function normalizeRecord(raw) {
       if (Array.isArray(raw)) {
-        // Format Array: [kod, nama, kategori, keterangan, jenis] atau [kod, nama, kat, subkat, keterangan, jenis]
+        // Susunan standard dump KB MOF:
+        // [0]=kod, [1]=kategori, [2]=sub_kategori, [3]=nama/jenis_aset, [4]=keterangan/maklumat, [5]=jenis
         if (raw.length >= 6) {
           return {
             kod: String(raw[0] || '').trim(),
-            nama: String(raw[1] || '').trim(),
-            kategori: `${raw[2] || ''} > ${raw[3] || ''}`.replace(/^ > | > $/g, '').trim(),
+            kategori: String(raw[1] || '-').trim(),
+            subKategori: String(raw[2] || '-').trim(),
+            nama: String(raw[3] || '').trim(),
             keterangan: String(raw[4] || '').trim(),
             jenis: normalizeJenis(raw[5], raw[0])
           };
         }
+        if (raw.length === 5) {
+          // Jika [1] ialah kategori dan [2] ialah subkategori, maka [3] ialah nama/jenis aset
+          return {
+            kod: String(raw[0] || '').trim(),
+            kategori: String(raw[1] || '-').trim(),
+            subKategori: String(raw[2] || '-').trim(),
+            nama: String(raw[3] || '').trim(),
+            keterangan: '',
+            jenis: normalizeJenis(raw[4], raw[0])
+          };
+        }
         return {
           kod: String(raw[0] || '').trim(),
+          kategori: '-',
+          subKategori: '-',
           nama: String(raw[1] || '').trim(),
-          kategori: String(raw[2] || '').trim(),
-          keterangan: String(raw[3] || '').trim(),
-          jenis: normalizeJenis(raw[4], raw[0])
+          keterangan: String(raw[2] || '').trim(),
+          jenis: normalizeJenis(raw[3], raw[0])
         };
       }
 
-      // Format Objek: semak semua kemungkinan nama kunci
-      const vals = Object.values(raw || {});
-      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || raw.id || vals[0] || '').trim();
-      const nama = String(raw.nama || raw.name || raw.item || raw.title || raw.perihal || vals[1] || '').trim();
+      // Format Objek: periksa setiap kunci secara eksplisit
+      const keys = Object.keys(raw || {});
+      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || raw.id || (keys[0] ? raw[keys[0]] : '') || '').trim();
+      const katRaw = String(raw.kategori || raw.category || raw.kat || '').trim();
+      const subRaw = String(raw.sub_kategori || raw.subkategori || raw.subcategory || raw.subkat || '').trim();
+      const namaRaw = String(raw.nama || raw.name || raw.jenis_aset || raw.perihal || raw.title || '').trim();
+      const descRaw = String(raw.keterangan || raw.maklumat || raw.description || raw.desc || raw.info || '').trim();
+      const jenisRaw = raw.jenis || raw.type || raw.kumpulan || raw.group || (keys.length > 0 ? raw[keys[keys.length - 1]] : '');
 
-      let kategori = '';
-      if (raw.kategori && raw.subkategori) {
-        kategori = `${raw.kategori} > ${raw.subkategori}`;
-      } else if (raw.category && raw.subcategory) {
-        kategori = `${raw.category} > ${raw.subcategory}`;
-      } else {
-        kategori = String(raw.kategori || raw.category || raw.subkategori || vals[2] || '').trim();
+      // Jika nama kosong tetapi desc ada (kes objek dengan kunci pendek berurutan)
+      let finalKat = katRaw || '-';
+      let finalSub = subRaw || '-';
+      let finalNama = namaRaw;
+      let finalDesc = descRaw;
+
+      if (!katRaw && !subRaw && keys.length >= 5) {
+        finalKat = String(raw[keys[1]] || '-').trim();
+        finalSub = String(raw[keys[2]] || '-').trim();
+        finalNama = String(raw[keys[3]] || '').trim();
+        finalDesc = String(raw[keys[4]] || '').trim();
+      } else if (finalKat.includes('>')) {
+        const parts = finalKat.split('>').map(s => s.trim()).filter(Boolean);
+        finalKat = parts[0] || '-';
+        finalSub = parts.slice(1).join(' > ') || '-';
       }
 
-      const keterangan = String(raw.keterangan || raw.description || raw.maklumat || raw.desc || raw.info || vals[3] || '').trim();
-      const rawJenis = raw.jenis || raw.type || raw.kumpulan || raw.group || vals[4] || '';
+      if (!finalNama && finalDesc) {
+        finalNama = finalDesc;
+        finalDesc = '';
+      }
 
       return {
         kod,
-        nama,
-        kategori,
-        keterangan,
-        jenis: normalizeJenis(rawJenis, kod)
+        kategori: finalKat || '-',
+        subKategori: finalSub || '-',
+        nama: finalNama || '-',
+        keterangan: finalDesc,
+        jenis: normalizeJenis(jenisRaw, kod)
       };
     }
 
@@ -287,7 +316,6 @@
       if (j.includes('tak alih') || j.includes('immovable')) return 'Aset Tak Alih';
       if (j.includes('tak ketara') || j.includes('intangible')) return 'Aset Tak Ketara';
       if (j.includes('alih') || j.includes('asset')) return 'Aset Alih';
-      // Tebak daripada panjang kod jika jenis tiada
       return String(kod || '').length > 10 ? 'Stok' : 'Aset Alih';
     }
 
@@ -330,26 +358,17 @@
       document.getElementById('countStok').textContent = stok.toLocaleString('ms-MY');
     }
 
-    function parseCategoryHierarchy(rawKat) {
-      const parts = String(rawKat || '').split('>').map(s => s.trim()).filter(Boolean);
-      if (parts.length === 0) return { kategori: '-', subKategori: '-' };
-      if (parts.length === 1) return { kategori: parts[0], subKategori: '-' };
-      return {
-        kategori: parts[0],
-        subKategori: parts.slice(1).join(' > ')
-      };
-    }
-
     function formatDescriptionHtml(rawDesc) {
       const text = String(rawDesc || '').trim();
-      if (!text) return '<p>Tiada keterangan tambahan.</p>';
-      const splitMatch = text.split(/DESCRIPTION\s*:/i);
+      if (!text) return '<p class="text-slate-400 italic">Tiada huraian lanjut direkodkan bagi item ini.</p>';
+      // Sokong kedua-dua ejaan DESCRIPTION: dan DECSRIPTION (typo rasmi dalam DB MOF)
+      const splitMatch = text.split(/DE(?:SC|CS)RIPTION\s*:?/i);
       if (splitMatch.length > 1) {
         const bmPart = splitMatch[0].trim();
-        const enPart = splitMatch.slice(1).join('DESCRIPTION:').trim();
+        const enPart = splitMatch.slice(1).join(' ').trim();
         return `
           ${bmPart ? `<p>${escapeHtml(bmPart)}</p>` : ''}
-          <div class="pt-1">
+          <div class="pt-1.5">
             <span class="font-bold text-slate-800 not-italic text-xs uppercase tracking-wide block mb-0.5">DESCRIPTION:</span>
             <p class="italic text-slate-600">${escapeHtml(enPart)}</p>
           </div>
@@ -394,6 +413,7 @@
         r.nama.toLowerCase().includes(q) ||
         r.kod.toLowerCase().includes(q) ||
         r.kategori.toLowerCase().includes(q) ||
+        r.subKategori.toLowerCase().includes(q) ||
         r.keterangan.toLowerCase().includes(q)
       );
 
@@ -413,7 +433,7 @@
 
       if (synonymTerms.length > 0) {
         const synMatches = basePool.filter(r => {
-          const hay = `${r.nama} ${r.kategori} ${r.keterangan}`.toLowerCase();
+          const hay = `${r.nama} ${r.kategori} ${r.subKategori} ${r.keterangan}`.toLowerCase();
           return synonymTerms.some(term => hay.includes(term));
         });
         if (synMatches.length > 0) {
@@ -445,12 +465,14 @@
           }));
 
           scored.sort((a, b) => b.score - a.score);
-          const topCategories = scored.slice(0, 5).filter(s => s.score > 0.30).map(s => s.kategori);
+          const topCategories = scored.slice(0, 5).filter(s => s.score > 0.30).map(s => s.kategori.toLowerCase());
 
           aiStatusBadge.classList.add('hidden');
 
           if (topCategories.length > 0) {
-            const aiMatches = basePool.filter(r => topCategories.includes(r.kategori)).slice(0, 10);
+            const aiMatches = basePool.filter(r =>
+              topCategories.some(tc => tc.includes(r.subKategori.toLowerCase()) || tc.includes(r.kategori.toLowerCase()))
+            ).slice(0, 10);
             if (aiMatches.length > 0) {
               renderRecords(aiMatches, true);
               resultSummary.innerHTML = `Tiada padanan tepat untuk "<strong>${escapeHtml(rawQuery)}</strong>" — memaparkan <strong>${aiMatches.length}</strong> cadangan <strong>Padanan Hampir</strong>`;
@@ -466,7 +488,7 @@
       const tokens = q.split(/\s+/).filter(t => t.length >= 3);
       if (tokens.length > 0) {
         const tokenMatches = basePool.filter(r => {
-          const hay = `${r.nama} ${r.kategori} ${r.keterangan}`.toLowerCase();
+          const hay = `${r.nama} ${r.kategori} ${r.subKategori} ${r.keterangan}`.toLowerCase();
           return tokens.some(t => hay.includes(t));
         }).slice(0, 10);
 
@@ -504,10 +526,9 @@
         const card = document.createElement('div');
         card.className = 'bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between card-hover';
 
-        const { kategori, subKategori } = parseCategoryHierarchy(item.kategori);
         const isStok = item.jenis === 'Stok';
-        const desc = item.keterangan || 'Tiada keterangan tambahan.';
-        const shortDesc = desc.length > 110 ? desc.slice(0, 110) + '...' : desc;
+        const desc = item.keterangan || 'Tiada huraian lanjut.';
+        const shortDesc = desc.length > 105 ? desc.slice(0, 105) + '...' : desc;
 
         card.innerHTML = `
           <div>
@@ -523,10 +544,10 @@
               <div><span class="mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">${escapeHtml(item.kod)}</span></div>
 
               <div class="font-bold text-slate-800">Kategori:</div>
-              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-2" title="${escapeAttr(kategori)}">${escapeHtml(kategori)}</div>
+              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-2" title="${escapeAttr(item.kategori)}">${escapeHtml(item.kategori)}</div>
 
               <div class="font-bold text-slate-800">Sub Kategori:</div>
-              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-2" title="${escapeAttr(subKategori)}">${escapeHtml(subKategori)}</div>
+              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-2" title="${escapeAttr(item.subKategori)}">${escapeHtml(item.subKategori)}</div>
 
               <div class="font-bold text-slate-800">${isStok ? 'Perihal Stok:' : 'Jenis Aset:'}</div>
               <div class="text-slate-900 font-bold uppercase leading-snug">${escapeHtml(item.nama)}</div>
@@ -560,7 +581,6 @@
 
     function openDetailModal(item) {
       if (!item) return;
-      const { kategori, subKategori } = parseCategoryHierarchy(item.kategori);
       const isStok = item.jenis === 'Stok';
       activeModalKod = item.kod;
 
@@ -568,8 +588,8 @@
       document.getElementById('modalJenisBadge').textContent = item.jenis;
       document.getElementById('modalLabelKod').textContent = isStok ? 'Kod Stok:' : 'Kod Aset:';
       document.getElementById('modalKod').textContent = item.kod;
-      document.getElementById('modalKategori').textContent = kategori;
-      document.getElementById('modalSubKategori').textContent = subKategori;
+      document.getElementById('modalKategori').textContent = item.kategori;
+      document.getElementById('modalSubKategori').textContent = item.subKategori;
       document.getElementById('modalLabelNama').textContent = isStok ? 'Perihal / Keterangan Stok:' : 'Jenis / Keterangan Aset:';
       document.getElementById('modalNama').textContent = item.nama;
       document.getElementById('modalLabelDesc').textContent = isStok ? 'Maklumat Stok:' : 'Maklumat Aset:';
