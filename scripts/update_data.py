@@ -11,30 +11,33 @@ def load_existing_records():
             kat = str(r[1]).strip()
             sub = str(r[2]).strip()
             nama = str(r[3]).strip()
-            parsed.append({"kategori": f"{kat} > {sub}", "nama": nama})
+            parsed.append({"kat": kat, "sub": sub, "nama": nama})
         elif isinstance(r, dict):
             vals = list(r.values())
             kat = str(r.get("kategori") or r.get("category") or (vals[1] if len(vals) > 1 else "")).strip()
             sub = str(r.get("sub_kategori") or r.get("subkategori") or (vals[2] if len(vals) > 2 else "")).strip()
             nama = str(r.get("nama") or r.get("name") or (vals[3] if len(vals) > 3 else "")).strip()
-            parsed.append({"kategori": f"{kat} > {sub}".strip(" >"), "nama": nama})
+            parsed.append({"kat": kat, "sub": sub, "nama": nama})
     return parsed
 
 def build_semantic_vectors(records):
-    print("Mengumpul kumpulan kategori unik daripada rekod...")
+    print("Mengumpul kumpulan Sub-Kategori unik sahaja (ringan & pantas)...")
     unique_groups = {}
     for r in records:
-        kat = r["kategori"]
+        kat = r["kat"]
+        sub = r["sub"]
         nama = r["nama"]
-        if kat and kat not in unique_groups:
-            unique_groups[kat] = f"{kat} ({nama})"
+        group_key = f"{kat} > {sub}".strip(" >")
+        if group_key and group_key not in unique_groups:
+            unique_groups[group_key] = f"{sub} - {kat} (cth: {nama})"
 
-    items = list(unique_groups.items())
+    # Hadkan maksimum 3,500 kumpulan unik supaya vectors.json kekal < 3MB
+    items = list(unique_groups.items())[:3500]
     texts = [v for _, v in items]
     print(f"Menjana vektor AI untuk {len(texts)} kumpulan pengelasan...")
 
     model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    embeddings = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+    embeddings = model.encode(texts, batch_size=64, normalize_embeddings=True, show_progress_bar=False)
 
     compressed_items = []
     for idx, (kat, _) in enumerate(items):
@@ -47,12 +50,12 @@ def build_semantic_vectors(records):
 
 def main():
     records = load_existing_records()
-    print(f"Jumlah rekod dibaca untuk indeks vektor: {len(records)}")
+    print(f"Jumlah rekod dibaca: {len(records)}")
     if records:
         vectors = build_semantic_vectors(records)
         with open("vectors.json", "w", encoding="utf-8") as f:
             json.dump({"items": vectors}, f, ensure_ascii=False, separators=(",", ":"))
-        print(f"Berjaya menjana vectors.json dengan {len(vectors)} vektor!")
+        print(f"Selesai! Saiz vectors.json kecil & pantas ({len(vectors)} vektor).")
 
 if __name__ == "__main__":
     main()
