@@ -1,0 +1,32 @@
+name: Auto Kemaskini Kod Treasury MOF
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # Berjalan setiap hari jam 2:00 pagi waktu Malaysia
+  workflow_dispatch:      # Membolehkan anda tekan butang Run secara manual bila-bila masa
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Jalankan skrip ambil data MOF
+        run: python scripts/update_data.py
+
+      - name: Simpan data terkini ke repo
+        run: |
+          git config user.name "GitHub Action Bot"
+          git config user.email "bot@github.com"
+          git add data_terkini.json
+          git diff --staged --quiet || git commit -m "Auto-kemaskini kod aset & stok terkini"
+          git push
