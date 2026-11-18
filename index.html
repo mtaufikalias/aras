@@ -271,12 +271,23 @@
       return String(kod || '').length > 10 ? 'Stok' : 'Aset Alih';
     }
 
-    function getCandidateImages(rawImg, kod, jenis) {
+    function extractAllImages(raw, kod, jenis) {
       const urls = [];
-      const imgStr = String(rawImg || '').trim();
-      if (imgStr.startsWith('http://') || imgStr.startsWith('https://')) urls.push(imgStr);
-      else if (imgStr && !imgStr.includes(' ')) urls.push(`https://knowledgebase.treasury.gov.my/kb/images/${imgStr}`);
-
+      const values = Array.isArray(raw) ? raw : Object.values(raw || {});
+      for (const v of values) {
+        if (Array.isArray(v)) {
+          for (const sub of v) {
+            const s = String(sub || '').trim();
+            if (s.startsWith('http://') || s.startsWith('https://')) urls.push(s);
+          }
+        } else {
+          const s = String(v || '').trim();
+          if (s.startsWith('http://') || s.startsWith('https://')) urls.push(s);
+          else if (/\.(jpg|jpeg|png|webp|gif)$/i.test(s) && !s.includes(' ')) {
+            urls.push(`https://knowledgebase.treasury.gov.my/kb/images/${s.replace(/^\/+/, '')}`);
+          }
+        }
+      }
       if (kod) {
         if (jenis === 'Stok') {
           urls.push(`https://knowledgebase.treasury.gov.my/kb/images/stock/${kod}_1.jpg`);
@@ -286,32 +297,36 @@
           urls.push(`https://knowledgebase.treasury.gov.my/kb/images/asset/${kod}.jpg`);
         }
       }
-      return urls;
+      return [...new Set(urls)];
     }
 
+    // Auto-kesan setiap lajur tanpa bergantung pada nama kunci
     function normalizeRecord(raw) {
-      if (Array.isArray(raw)) {
-        const kod = String(raw[0] || '').trim();
-        const nama = cleanText(raw[1]);
-        const jenis = normalizeJenis(raw[2], kod);
-        const kategori = cleanText(raw[3]) || '-';
-        const subKategori = cleanText(raw[4]) || '-';
-        const keterangan = String(raw[5] || '').trim();
-        const images = getCandidateImages(raw[6], kod, jenis);
-        return { kod, nama, jenis, kategori, subKategori, keterangan, images };
+      const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
+      const obj = Array.isArray(raw) ? {} : (raw || {});
+
+      const kod = String(obj.kod || obj.code || obj.kod_aset || obj.kod_stok || vals[0] || '').trim();
+      const rawJenis = obj.jenis || obj.type || obj.kumpulan || vals[1];
+      const jenis = normalizeJenis(rawJenis, kod);
+      const kategori = cleanText(obj.kategori || obj.category || vals[2]) || '-';
+
+      const col3 = String(vals[3] || '').trim();
+      const isRepeatKod = col3 === kod || /^\d{6,}$/.test(col3);
+      const subKategori = cleanText(obj.sub_kategori || obj.subkategori || obj.subcategory || (isRepeatKod ? '-' : col3)) || '-';
+      const nama = cleanText(obj.nama || obj.name || obj.jenis_aset || obj.perihal || vals[4] || (isRepeatKod ? '' : col3)) || '-';
+
+      // Auto-kesan deskripsi: cari kunci rasmi atau teks terpanjang yang bukan URL
+      let keterangan = String(obj.keterangan || obj.maklumat || obj.description || obj.desc || obj.huraian || '').trim();
+      if (!keterangan) {
+        for (let i = 4; i < vals.length; i++) {
+          const s = String(vals[i] || '').trim();
+          if (s && s !== nama && s !== kategori && s !== subKategori && !s.startsWith('http') && !/\.(jpg|jpeg|png|webp)$/i.test(s)) {
+            if (s.length > keterangan.length) keterangan = s;
+          }
+        }
       }
 
-      const vals = Object.values(raw || {});
-      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || vals[0] || '').trim();
-      const nama = cleanText(raw.nama || raw.name || raw.jenis_aset || raw.perihal || vals[1]);
-      const rawJenis = raw.jenis || raw.type || raw.kumpulan || vals[2];
-      const jenis = normalizeJenis(rawJenis, kod);
-      const kategori = cleanText(raw.kategori || raw.category || vals[3]) || '-';
-      const subKategori = cleanText(raw.sub_kategori || raw.subkategori || raw.subcategory || vals[4]) || '-';
-      const keterangan = String(raw.keterangan || raw.maklumat || raw.description || raw.desc || vals[5] || '').trim();
-      const rawImg = raw.gambar || raw.image || raw.img || raw.foto || vals[6] || '';
-      const images = getCandidateImages(rawImg, kod, jenis);
-
+      const images = extractAllImages(raw, kod, jenis);
       return { kod, nama, jenis, kategori, subKategori, keterangan, images };
     }
 
@@ -444,7 +459,6 @@
       const q = rawQuery.toLowerCase();
       const basePool = filterByJenis(allRecords);
 
-      // Lapisan 1: Carian Tepat & Frasa
       let exactMatches = basePool.filter(r =>
         r.nama.toLowerCase().includes(q) ||
         r.kod.toLowerCase().includes(q) ||
@@ -458,7 +472,6 @@
         return;
       }
 
-      // Lapisan 2: Kamus Sinonim Tempatan
       let synonymTerms = [];
       for (const [key, vals] of Object.entries(SYNONYMS)) {
         if (q.includes(key) || key.includes(q)) synonymTerms.push(...vals);
@@ -475,7 +488,6 @@
         }
       }
 
-      // Lapisan 3: Embedded Neural AI (Model Ringan 22MB)
       if (semanticVectors.length > 0) {
         try {
           aiStatusBadge.classList.remove('hidden');
@@ -514,7 +526,6 @@
         }
       }
 
-      // Lapisan 4: Padanan Sebahagian Perkataan
       const tokens = q.split(/\s+/).filter(t => t.length >= 3);
       if (tokens.length > 0) {
         const tokenMatches = basePool.filter(r => {
