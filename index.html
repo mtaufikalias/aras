@@ -4,805 +4,425 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ARAS — Antaramuka Rujukan Aset &amp; Stok</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
-    }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .card-hover { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.08); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- HEADER KORPORAT BERSIH -->
-  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <!-- Jenama & Tajuk -->
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
-            <i data-lucide="layers" class="w-5 h-5 text-blue-400"></i>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-xl font-extrabold tracking-tight text-white">ARAS</h1>
-              <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600/30 text-blue-300 border border-blue-500/30">
-                1PP / MOF
-              </span>
-            </div>
-            <p class="text-xs text-slate-300 font-medium">
-              Antaramuka Rujukan Aset &amp; Stok
-            </p>
-          </div>
+  <!-- Header -->
+  <header class="bg-[#0f172a] text-white border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
         </div>
-
-        <!-- Status Rekod & Butang Tetapan AI -->
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div class="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs text-slate-300 flex items-center gap-2">
-            <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
-            <span id="headerStatusText">Memuatkan data...</span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-extrabold tracking-tight">ARAS</h1>
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-400/20">1PP / MOF</span>
           </div>
+          <p class="text-xs text-slate-400">Antaramuka Rujukan Aset &amp; Stok</p>
+        </div>
+      </div>
 
-          <button onclick="openAiSettingsModal()"
-            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold transition cursor-pointer">
-            <i data-lucide="settings" class="w-3.5 h-3.5 text-blue-400"></i>
-            <span>Tetapan AI</span>
-            <span id="aiKeyStatusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-          </button>
+      <div class="flex items-center gap-2.5 text-xs">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Dikemaskini: <strong id="metaUpdated" class="text-white font-semibold">Memuatkan...</strong></span>
+          <span class="text-slate-600">|</span>
+          <span>Jumlah Rekod: <strong id="metaTotal" class="text-white font-semibold">0</strong></span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- KANDUNGAN UTAMA -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
-
-    <!-- KOTAK CARIAN & PENAPIS KATEGORI (BERSIH & MINIMALIS) -->
-    <section class="bg-white rounded-2xl shadow-xs border border-slate-200/90 p-4 sm:p-5 space-y-4">
-      <!-- Bar Carian -->
-      <div class="relative flex items-center">
-        <div class="absolute left-4 text-slate-400 pointer-events-none">
-          <i data-lucide="search" class="w-5 h-5"></i>
+  <!-- Search & Filters -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 mb-6">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10.5a7.5 7.5 0 0013.15 6.15z"/>
+          </svg>
         </div>
         <input
-          type="text"
           id="searchInput"
-          placeholder="Cari nama barang, kod aset, atau stok (cth: kerusi, komputer, dapur)..."
-          class="w-full pl-12 pr-12 py-3.5 text-sm sm:text-base bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition font-medium text-slate-900 placeholder:text-slate-400"
+          type="text"
           autocomplete="off"
+          placeholder="Cari nama barang, kod aset, atau stok (cth: kerusi, komputer, induction cooker)..."
+          class="w-full pl-12 pr-12 py-3.5 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition"
         />
-        <button id="clearSearchBtn" onclick="clearSearch()" title="Padam carian"
-          class="hidden absolute right-3.5 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button id="clearBtn" class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600" title="Padam carian">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
         </button>
       </div>
 
-      <!-- Pil Penapis Kategori -->
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-1.5" id="categoryPills">
-          <button data-cat="ALL" onclick="setCategoryFilter('ALL')"
-            class="cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer">
-            Semua (<span id="count-ALL">0</span>)
-          </button>
-          <button data-cat="ASET_ALIH" onclick="setCategoryFilter('ASET_ALIH')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-            Aset Alih (<span id="count-ASET_ALIH">0</span>)
-          </button>
-          <button data-cat="ASET_TAK_ALIH" onclick="setCategoryFilter('ASET_TAK_ALIH')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-            Aset Tak Alih (<span id="count-ASET_TAK_ALIH">0</span>)
-          </button>
-          <button data-cat="ASET_TAK_KETARA" onclick="setCategoryFilter('ASET_TAK_KETARA')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-            Aset Tak Ketara (<span id="count-ASET_TAK_KETARA">0</span>)
-          </button>
-          <button data-cat="STOK" onclick="setCategoryFilter('STOK')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
-            Stok (<span id="count-STOK">0</span>)
-          </button>
-        </div>
-
-        <!-- Butang Tanya AI Halus (Sentiasa tersedia jika pengguna mahu nasihat pengelasan) -->
-        <button id="subtleAskAiBtn" onclick="triggerAskAi()"
-          class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 text-xs font-semibold transition cursor-pointer">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
-          <span>Tanya AI</span>
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap items-center gap-2 mt-4" id="filterBar">
+        <button data-filter="Semua" class="filter-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm transition">
+          Semua (<span id="countSemua">0</span>)
         </button>
-      </div>
-    </section>
-
-    <!-- BANNER PADANAN HAMPIR (DIPAPARKAN BILA MENGGUNAKAN PEMETAAN SINONIM) -->
-    <section id="closeMatchBanner" class="hidden bg-blue-50/90 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div class="flex items-start gap-3">
-        <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
-          Padanan Hampir
-        </span>
-        <div class="text-xs sm:text-sm text-slate-700 leading-relaxed" id="closeMatchDescription"></div>
-      </div>
-      <button onclick="triggerAskAi()"
-        class="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition cursor-pointer">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-        <span>Tanya AI</span>
-      </button>
-    </section>
-
-    <!-- PANEL JAWAPAN TANYA AI (GEMINI 2.5 FLASH) -->
-    <section id="aiResponsePanel" class="hidden bg-white border border-blue-200 rounded-2xl p-5 shadow-xs space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-          </span>
-          <h3 class="font-bold text-sm text-slate-900">Cadangan Pengelasan 1PP (Tanya AI)</h3>
-        </div>
-        <button onclick="document.getElementById('aiResponsePanel').classList.add('hidden')"
-          class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button data-filter="Aset Alih" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          Aset Alih (<span id="countAlih">0</span>)
         </button>
-      </div>
-      <div id="aiResponseContent" class="text-xs sm:text-sm text-slate-700 space-y-2.5"></div>
-    </section>
-
-    <!-- BAR MAKLUMAT HASIL CARIAN -->
-    <div id="resultsToolbar" class="flex items-center justify-between text-xs text-slate-500 px-1">
-      <div>
-        Menunjukkan <span id="showingCount" class="font-bold text-slate-800">0</span> daripada
-        <span id="totalMatchedCount" class="font-bold text-slate-800">0</span> rekod
-      </div>
-      <div id="pageIndicator" class="font-medium">Halaman 1</div>
-    </div>
-
-    <!-- KEADAAN MEMUATKAN -->
-    <div id="loadingState" class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
-      <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-spin">
-        <i data-lucide="loader-2" class="w-5 h-5"></i>
-      </div>
-      <p class="text-sm font-semibold text-slate-700">Memuatkan pangkalan data ARAS...</p>
-    </div>
-
-    <!-- KEADAAN KOSONG (0 REKOD) DENGAN BUTANG TANYA AI -->
-    <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center space-y-4">
-      <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
-        <i data-lucide="search-x" class="w-6 h-6"></i>
-      </div>
-      <div class="space-y-1">
-        <h3 class="text-base font-bold text-slate-900">
-          Tiada rekod ditemui untuk "<span id="emptyQueryLabel" class="text-blue-600"></span>"
-        </h3>
-        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-          Istilah ini mungkin menggunakan nama komersial. Klik butang di bawah untuk mendapatkan cadangan kod rasmi Perbendaharaan yang paling hampir.
-        </p>
-      </div>
-      <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-        <button onclick="triggerAskAi()"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer">
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span>Tanya AI</span>
+        <button data-filter="Aset Tak Alih" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          Aset Tak Alih (<span id="countTakAlih">0</span>)
         </button>
-        <button onclick="clearSearch()"
-          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition cursor-pointer">
-          Set Semula
+        <button data-filter="Aset Tak Ketara" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          Aset Tak Ketara (<span id="countTakKetara">0</span>)
+        </button>
+        <button data-filter="Stok" class="filter-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          Stok (<span id="countStok">0</span>)
         </button>
       </div>
     </div>
 
-    <!-- SENARAI KAD HASIL CARIAN -->
+    <!-- Status Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4 px-1">
+      <p id="resultSummary" class="text-xs sm:text-sm text-slate-500">Memuatkan pangkalan data...</p>
+      <span id="aiStatusBadge" class="hidden inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+        <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-ping"></span>
+        <span id="aiStatusText">Menganalisis padanan semantik...</span>
+      </span>
+    </div>
+
+    <!-- Results Grid -->
     <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-    <!-- BUTANG MUAT LAGI / PAGINASI -->
-    <div id="loadMoreWrapper" class="hidden pt-2 pb-4 text-center">
-      <button onclick="loadMoreResults()"
-        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer">
-        <span>Muat Lagi Rekod</span>
-        <i data-lucide="chevron-down" class="w-4 h-4"></i>
-      </button>
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+      <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h3 class="text-sm font-bold text-slate-800">Tiada rekod ditemui</h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Cuba gunakan kata kunci yang lebih umum atau semak ejaan perkataan anda.</p>
     </div>
-
   </main>
 
-  <!-- FOOTER RINGKAS -->
-  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-      <div><strong>ARAS</strong> &mdash; Antaramuka Rujukan Aset &amp; Stok (1PP / MOF)</div>
-      <div>Sumber Rasmi: <a href="https://knowledgebase.treasury.gov.my/kb/" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-medium">Portal Knowledgebase Perbendaharaan</a></div>
-    </div>
-  </footer>
-
-  <!-- MODAL TETAPAN AI (GOOGLE GEMINI API KEY) -->
-  <div id="aiSettingsModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeAiSettingsModal()">
-    <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-xl border border-slate-200" onclick="event.stopPropagation()">
-      <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i data-lucide="key-round" class="w-4 h-4 text-blue-400"></i>
-          <h3 class="font-bold text-sm">Tetapan AI (Google Gemini)</h3>
-        </div>
-        <button onclick="closeAiSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-      </div>
-
-      <div class="p-5 space-y-4 text-xs sm:text-sm">
-        <p class="text-slate-600 leading-relaxed text-xs">
-          Fungsi <strong>Tanya AI</strong> menggunakan model <strong>Gemini 2.5 Flash</strong> secara percuma (RM0) untuk mencadangkan pengelasan kod 1PP apabila istilah carian tiada dalam pangkalan data. Kunci API anda hanya disimpan dalam pelayar ini (<code class="bg-slate-100 px-1 rounded">localStorage</code>).
-        </p>
-
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-xs text-slate-600">
-          <div class="font-bold text-slate-800">Cara mendapatkan Kunci API Percuma:</div>
-          <ol class="list-decimal list-inside space-y-1">
-            <li>Buka <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-semibold">Google AI Studio</a> dan log masuk akaun Google.</li>
-            <li>Klik <strong>Create API key</strong> dan salin kod bermula dengan <code class="bg-white px-1 border rounded">AIza...</code>.</li>
-            <li>Tampal kod tersebut di ruangan di bawah dan klik <strong>Simpan</strong>.</li>
-          </ol>
-          <p class="mt-2.5 pt-2 border-t border-slate-200 text-amber-800 bg-amber-50/90 p-2.5 rounded-lg border border-amber-200/80 leading-relaxed">
-            ⚠️ <strong>Nota:</strong> Sila gunakan <strong>akaun Gmail peribadi (@gmail.com)</strong> sahaja. E-mel rasmi kerajaan/agensi (.gov.my) tidak dapat digunakan kerana akses Google AI Studio disekat oleh dasar keselamatan pentadbir organisasi.
-          </p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label for="geminiKeyInput" class="block text-xs font-bold text-slate-800">Kunci API Google Gemini:</label>
-          <input type="password" id="geminiKeyInput" placeholder="AIzaSy..."
-            class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white" />
-        </div>
-
-        <div class="flex items-center justify-between pt-2">
-          <button onclick="clearGeminiKey()" class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">
-            Padam Kunci
-          </button>
-          <div class="flex items-center gap-2">
-            <button onclick="closeAiSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
-              Batal
-            </button>
-            <button onclick="saveGeminiKey()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
-              Simpan Tetapan
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOAST NOTIFIKASI SALIN KOD -->
+  <!-- Toast Notification -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 flex items-center gap-2 text-xs font-semibold">
-      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-      <span id="toastMessage">Kod berjaya disalin!</span>
+    <div class="bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5">
+      <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      <span id="toastMsg">Kod berjaya disalin!</span>
     </div>
   </div>
 
-  <!-- SKRIP APLIKASI -->
-  <script>
-    // =========================================================================
-    // 1. PEMETAAN SINONIM KETAT ("PADANAN HAMPIR" - RM0, TANPA API KEY)
-    // =========================================================================
-    const CLOSE_MATCH_DICTIONARY = [
-      { terms: ['induction cooker', 'induction', 'dapur aruhan'], targets: ['dapur elektrik'] },
-      { terms: ['air fryer', 'airfryer', 'penggoreng udara'], targets: ['ketuhar'] },
-      { terms: ['powerbank', 'power bank'], targets: ['bateri'] },
-      { terms: ['walkie talkie', 'walkie-talkie'], targets: ['radio dua hala', 'alat perhubungan'] },
-      { terms: ['laptop'], targets: ['komputer riba'] },
-      { terms: ['thumbdrive', 'pendrive', 'thumb drive', 'pen drive'], targets: ['pemacu'] },
-      { terms: ['water dispenser'], targets: ['penapis air', 'dispenser air'] },
-      { terms: ['projector', 'projektor'], targets: ['projektor'] },
-      { terms: ['aircond', 'air cond', 'aircon'], targets: ['penyaman udara'] },
-      { terms: ['cctv'], targets: ['kamera litar tertutup'] },
-      { terms: ['drone', 'dron'], targets: ['pesawat tanpa pemandu'] },
-      { terms: ['smartphone', 'handphone'], targets: ['telefon pintar', 'telefon bimbit'] },
-      { terms: ['tablet', 'ipad'], targets: ['komputer tablet'] },
-      { terms: ['microwave'], targets: ['ketuhar gelombang mikro'] },
-      { terms: ['fridge', 'peti ais'], targets: ['peti sejuk'] },
-      { terms: ['vacuum', 'vakum'], targets: ['pembersih hampagas'] },
-      { terms: ['printer'], targets: ['pencetak'] },
-      { terms: ['scanner'], targets: ['pengimbas'] },
-      { terms: ['shredder'], targets: ['mesin perincih'] },
-      { terms: ['whiteboard'], targets: ['papan putih'] }
-    ];
-
-    // Data sandaran pratonton jika data_terkini.json belum tersedia (mod luar talian)
-    const SAMPLE_FALLBACK_RECORDS = [
-      { id: '101', code: '010101001', desc: 'DAPUR ELEKTRIK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Dapur memasak elektrik kegunaan pantri atau asrama.' },
-      { id: '102', code: '010101002', desc: 'KETUHAR GELOMBANG MIKRO', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pemanas makanan gelombang mikro.' },
-      { id: '103', code: '010101003', desc: 'KETUHAR ELEKTRIK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pemanas dan pembakar elektrik.' },
-      { id: '104', code: '010101004', desc: 'PENAPIS AIR / DISPENSER AIR', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Mesin penapis dan dispenser air minuman.' },
-      { id: '105', code: '010101005', desc: 'PETI SEJUK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Peti sejuk penyimpanan bahan makanan atau makmal.' },
-      { id: '106', code: '020101001', desc: 'KOMPUTER RIBA', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Komputer mudah alih lengkap dengan skrin dan bateri.' },
-      { id: '107', code: '020101002', desc: 'KOMPUTER TABLET', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Komputer skrin sentuh mudah alih.' },
-      { id: '108', code: '020102001', desc: 'PENCETAK LASER', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Mesin pencetak dokumen berkelajuan tinggi.' },
-      { id: '109', code: '020102002', desc: 'PENGIMBAS DOKUMEN', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Pengimbas imej dan dokumen digital.' },
-      { id: '110', code: '020103001', desc: 'PROJEKTOR LCD', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERALATAN TAYANGAN', c3: '', detail: 'Projektor paparan visual bilik mesyuarat.' },
-      { id: '111', code: '030101001', desc: 'RADIO DUA HALA', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'ALAT PERHUBUNGAN', c3: '', detail: 'Alat komunikasi radio mudah alih untuk operasi.' },
-      { id: '112', code: '030102001', desc: 'KAMERA LITAR TERTUTUP (CCTV)', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'KESELAMATAN', c3: '', detail: 'Kamera pemantauan keselamatan bangunan.' },
-      { id: '113', code: '030103001', desc: 'PESAWAT TANPA PEMANDU (UAV)', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'PEMANTAUAN', c3: '', detail: 'Pesawat kawalan jauh berkamera.' },
-      { id: '114', code: '040101001', desc: 'PENYAMAN UDARA', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'ALAT HAWA DINGIN', c3: '', detail: 'Unit penyaman udara pejabat.' },
-      { id: '115', code: '040102001', desc: 'PEMBERSIH HAMPAGAS', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'PEMBERSIHAN', c3: '', detail: 'Mesin penyedut habuk dan kotoran.' },
-      { id: '116', code: '010201001', desc: 'MESIN PERINCIH KERTAS', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'MESIN PEJABAT', c3: '', detail: 'Mesin pemusnah dokumen terperingkat.' },
-      { id: '117', code: '050101001', desc: 'PAPAN PUTIH BERODA', cat: 'ASET_ALIH', c1: 'PERABOT', c2: 'PAPAN TULIS', c3: '', detail: 'Papan tulis putih bermagnet.' },
-      { id: '118', code: '050102001', desc: 'KERUSI PEJABAT BERODA', cat: 'ASET_ALIH', c1: 'PERABOT', c2: 'TEMPAT DUDUK', c3: '', detail: 'Kerusi ergonomik kegunaan pejabat.' },
-      { id: '201', code: 'S01010001', desc: 'PEMACU PEN USB', cat: 'STOK', c1: 'ALAT TULIS & KELENGKAPAN', c2: 'AKSESORI ICT', c3: 'STORAN', detail: 'Peranti storan mudah alih USB.' },
-      { id: '202', code: 'S01010002', desc: 'BATERI / PEK KUASA MUDAH ALIH', cat: 'STOK', c1: 'ALAT TULIS & KELENGKAPAN', c2: 'BEKALAN ELEKTRIK', c3: 'BATERI', detail: 'Bateri dan bekalan kuasa simpanan mudah alih.' }
-    ];
-
-    const PAGE_SIZE = 30;
-    const CLOSE_MATCH_LIMIT = 10;
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+    env.allowLocalModels = false;
 
     let allRecords = [];
-    let filteredRecords = [];
-    let currentCategory = 'ALL';
-    let visibleCount = PAGE_SIZE;
-    let isCloseMatchMode = false;
-    let activeCloseMatchTargets = [];
+    let semanticVectors = [];
+    let embedder = null;
+    let currentFilter = 'Semua';
+    let searchTimeout = null;
 
-    // =========================================================================
-    // 2. INISIALISASI & MUAT TURUN DATA DARI data_terkini.json
-    // =========================================================================
-    async function loadTreasuryData() {
-      const statusText = document.getElementById('headerStatusText');
-      const syncDot = document.getElementById('syncDot');
+    // Lapisan 2: Kamus Sinonim Pantas (0.01 saat)
+    const SYNONYMS = {
+      'induction cooker': ['dapur elektrik', 'periuk'],
+      'air fryer': ['ketuhar', 'penggoreng'],
+      'rice cooker': ['periuk nasi'],
+      'water dispenser': ['penapis air', 'dispenser air'],
+      'coway': ['penapis air'],
+      'cuckoo': ['penapis air'],
+      'laptop': ['komputer riba'],
+      'notebook': ['komputer riba'],
+      'pc': ['komputer meja', 'desktop'],
+      'printer': ['pencetak'],
+      'scanner': ['pengimbas'],
+      'projector': ['projektor'],
+      'powerbank': ['bateri', 'pengecas'],
+      'thumbdrive': ['pemacu kilat', 'storan'],
+      'pendrive': ['pemacu kilat', 'storan'],
+      'aircond': ['penyaman udara', 'hawa dingin'],
+      'air cond': ['penyaman udara', 'hawa dingin'],
+      'cctv': ['kamera litar tertutup'],
+      'walkie talkie': ['radio dua hala'],
+      'drone': ['pesawat tanpa pemandu', 'uav'],
+      'whiteboard': ['papan putih'],
+      'shredder': ['mesin perincih kertas']
+    };
 
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultsGrid = document.getElementById('resultsGrid');
+    const emptyState = document.getElementById('emptyState');
+    const resultSummary = document.getElementById('resultSummary');
+    const aiStatusBadge = document.getElementById('aiStatusBadge');
+    const aiStatusText = document.getElementById('aiStatusText');
+
+    async function init() {
       try {
-        const res = await fetch(`./data_terkini.json?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const res = await fetch('data_terkini.json');
+        const data = await res.json();
+        allRecords = data.records || [];
 
-        if (!json || !Array.isArray(json.records) || json.records.length === 0) {
-          throw new Error('Fail JSON tidak mempunyai rekod');
-        }
+        document.getElementById('metaUpdated').textContent = data.updated_at || '-';
+        document.getElementById('metaTotal').textContent = allRecords.length.toLocaleString('ms-MY');
 
-        allRecords = json.records;
-        const updatedAt = json.updated_at || 'Terkini';
-        statusText.textContent = `Dikemaskini: ${updatedAt} | Jumlah Rekod: ${allRecords.length.toLocaleString()}`;
-        syncDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shrink-0';
+        updateCounts();
+        renderRecords(allRecords.slice(0, 30), false);
+        resultSummary.innerHTML = `Menunjukkan <strong>30</strong> daripada <strong>${allRecords.length.toLocaleString('ms-MY')}</strong> rekod`;
+
+        // Muat fail vektor semantik secara senyap di belakang tabir
+        fetch('vectors.json')
+          .then(r => r.ok ? r.json() : null)
+          .then(vData => {
+            if (vData && vData.items) semanticVectors = vData.items;
+          })
+          .catch(() => {});
       } catch (err) {
-        allRecords = SAMPLE_FALLBACK_RECORDS;
-        statusText.textContent = `Mod Pratonton | Jumlah Rekod: ${allRecords.length.toLocaleString()}`;
-        syncDot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
-      } finally {
-        document.getElementById('loadingState').classList.add('hidden');
-        updateAiKeyIndicator();
-        runSearchAndFilter();
+        resultSummary.textContent = 'Gagal memuatkan pangkalan data.';
       }
     }
 
-    // =========================================================================
-    // 3. ENJIN CARIAN & PADANAN HAMPIR
-    // =========================================================================
-    let debounceTimer = null;
-    document.getElementById('searchInput').addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        document.getElementById('aiResponsePanel').classList.add('hidden');
-        runSearchAndFilter();
-      }, 150);
-    });
-
-    function clearSearch() {
-      const input = document.getElementById('searchInput');
-      input.value = '';
-      currentCategory = 'ALL';
-      document.getElementById('aiResponsePanel').classList.add('hidden');
-      updateCategoryButtons();
-      runSearchAndFilter();
-    }
-
-    function setCategoryFilter(cat) {
-      currentCategory = cat;
-      updateCategoryButtons();
-      runSearchAndFilter();
-    }
-
-    function updateCategoryButtons() {
-      document.querySelectorAll('.cat-pill').forEach((btn) => {
-        const active = btn.dataset.cat === currentCategory;
-        btn.className = active
-          ? 'cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer'
-          : 'cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
-      });
-    }
-
-    function findCloseMatchMapping(queryLower) {
-      for (const entry of CLOSE_MATCH_DICTIONARY) {
-        if (entry.terms.some((t) => queryLower === t || queryLower.includes(t))) {
-          return entry.targets;
-        }
+    function updateCounts() {
+      let alih = 0, takAlih = 0, takKetara = 0, stok = 0;
+      for (const r of allRecords) {
+        if (r.jenis === 'Aset Alih') alih++;
+        else if (r.jenis === 'Aset Tak Alih') takAlih++;
+        else if (r.jenis === 'Aset Tak Ketara') takKetara++;
+        else if (r.jenis === 'Stok') stok++;
       }
-      return null;
+      document.getElementById('countSemua').textContent = allRecords.length.toLocaleString('ms-MY');
+      document.getElementById('countAlih').textContent = alih.toLocaleString('ms-MY');
+      document.getElementById('countTakAlih').textContent = takAlih.toLocaleString('ms-MY');
+      document.getElementById('countTakKetara').textContent = takKetara.toLocaleString('ms-MY');
+      document.getElementById('countStok').textContent = stok.toLocaleString('ms-MY');
     }
 
-    function runSearchAndFilter() {
-      const rawQuery = document.getElementById('searchInput').value.trim();
-      const queryLower = rawQuery.toLowerCase();
+    function filterByJenis(list) {
+      if (currentFilter === 'Semua') return list;
+      return list.filter(r => r.jenis === currentFilter);
+    }
 
-      document.getElementById('clearSearchBtn').classList.toggle('hidden', rawQuery.length === 0);
-      document.getElementById('subtleAskAiBtn').classList.toggle('hidden', rawQuery.length === 0);
+    function cosineSimilarity(vecA, vecB) {
+      let dot = 0;
+      for (let i = 0; i < vecA.length; i++) dot += vecA[i] * vecB[i];
+      return dot; // Vektor sudah dinormalisasi
+    }
 
-      isCloseMatchMode = false;
-      activeCloseMatchTargets = [];
-      let matchedPool = [];
+    async function performSearch() {
+      const rawQuery = searchInput.value.trim();
+      clearBtn.classList.toggle('hidden', !rawQuery);
+      aiStatusBadge.classList.add('hidden');
 
       if (!rawQuery) {
-        matchedPool = allRecords;
-      } else {
-        // Langkah 1: Carian terus (exact/substring) dalam kod, perihal, dan hierarki
-        const directMatches = allRecords.filter((rec) => {
-          const searchable = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
-          return searchable.includes(queryLower);
+        const filtered = filterByJenis(allRecords);
+        renderRecords(filtered.slice(0, 30), false);
+        resultSummary.innerHTML = `Menunjukkan <strong>${Math.min(30, filtered.length)}</strong> daripada <strong>${filtered.length.toLocaleString('ms-MY')}</strong> rekod`;
+        return;
+      }
+
+      const q = rawQuery.toLowerCase();
+      const basePool = filterByJenis(allRecords);
+
+      // LAPISAN 1: Carian Tepat & Kata Kunci
+      let exactMatches = basePool.filter(r =>
+        r.nama.toLowerCase().includes(q) ||
+        r.kod.toLowerCase().includes(q) ||
+        r.kategori.toLowerCase().includes(q) ||
+        r.keterangan.toLowerCase().includes(q)
+      );
+
+      if (exactMatches.length > 0) {
+        renderRecords(exactMatches.slice(0, 60), false);
+        resultSummary.innerHTML = `Menunjukkan <strong>${Math.min(60, exactMatches.length)}</strong> daripada <strong>${exactMatches.length.toLocaleString('ms-MY')}</strong> rekod ditemui`;
+        return;
+      }
+
+      // LAPISAN 2: Kamus Sinonim Tempatan
+      let synonymTerms = [];
+      for (const [key, vals] of Object.entries(SYNONYMS)) {
+        if (q.includes(key) || key.includes(q)) {
+          synonymTerms.push(...vals);
+        }
+      }
+
+      if (synonymTerms.length > 0) {
+        const synMatches = basePool.filter(r => {
+          const hay = `${r.nama} ${r.kategori}`.toLowerCase();
+          return synonymTerms.some(term => hay.includes(term));
         });
+        if (synMatches.length > 0) {
+          renderRecords(synMatches.slice(0, 10), true);
+          resultSummary.innerHTML = `Tiada padanan tepat untuk "<strong>${escapeHtml(rawQuery)}</strong>" — memaparkan <strong>${Math.min(10, synMatches.length)}</strong> cadangan <strong>Padanan Hampir</strong>`;
+          return;
+        }
+      }
 
-        if (directMatches.length > 0) {
-          matchedPool = directMatches;
-        } else {
-          // Langkah 2: Semak kamus pemetaan ketat ("Padanan Hampir") jika carian terus = 0
-          const mappedTargets = findCloseMatchMapping(queryLower);
-          if (mappedTargets && mappedTargets.length > 0) {
-            const closeMatches = allRecords.filter((rec) => {
-              const titleAndHierarchy = `${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''}`.toLowerCase();
-              return mappedTargets.some((target) => titleAndHierarchy.includes(target.toLowerCase()));
-            });
+      // LAPISAN 3: Embedded Neural AI (Transformers.js + vectors.json)
+      if (semanticVectors.length > 0) {
+        try {
+          aiStatusBadge.classList.remove('hidden');
+          aiStatusText.textContent = embedder ? 'Menganalisis maksud semantik...' : 'Memuatkan enjin AI pelayar (kali pertama)...';
 
-            // Susun keutamaan supaya yang mengandungi frasa sasaran pada nama item berada di atas sekali
-            closeMatches.sort((a, b) => {
-              const aInDesc = mappedTargets.some((t) => a.desc.toLowerCase().includes(t.toLowerCase())) ? 0 : 1;
-              const bInDesc = mappedTargets.some((t) => b.desc.toLowerCase().includes(t.toLowerCase())) ? 0 : 1;
-              return aInDesc - bInDesc;
-            });
+          if (!embedder) {
+            embedder = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
+          }
 
-            if (closeMatches.length > 0) {
-              isCloseMatchMode = true;
-              activeCloseMatchTargets = mappedTargets;
-              matchedPool = closeMatches.slice(0, CLOSE_MATCH_LIMIT);
+          aiStatusText.textContent = 'Mencari pengelasan MOF paling hampir...';
+          const output = await embedder(rawQuery, { pooling: 'mean', normalize: true });
+          const queryVec = Array.from(output.data);
+
+          const scored = semanticVectors.map(item => ({
+            kategori: item.k,
+            score: cosineSimilarity(queryVec, item.v)
+          }));
+
+          scored.sort((a, b) => b.score - a.score);
+          const topCategories = scored.slice(0, 4).filter(s => s.score > 0.35).map(s => s.kategori);
+
+          aiStatusBadge.classList.add('hidden');
+
+          if (topCategories.length > 0) {
+            const aiMatches = basePool.filter(r => topCategories.includes(r.kategori)).slice(0, 10);
+            if (aiMatches.length > 0) {
+              renderRecords(aiMatches, true);
+              resultSummary.innerHTML = `Tiada padanan tepat untuk "<strong>${escapeHtml(rawQuery)}</strong>" — memaparkan <strong>${aiMatches.length}</strong> cadangan <strong>Padanan Hampir</strong>`;
+              return;
             }
           }
+        } catch (e) {
+          aiStatusBadge.classList.add('hidden');
         }
       }
 
-      // Papar atau sembunyi banner "Padanan Hampir"
-      const closeBanner = document.getElementById('closeMatchBanner');
-      if (isCloseMatchMode && matchedPool.length > 0) {
-        const targetBadges = activeCloseMatchTargets
-          .map((t) => `<strong class="text-blue-900 underline decoration-blue-400">${escapeHtml(t.toUpperCase())}</strong>`)
-          .join(' / ');
-        document.getElementById('closeMatchDescription').innerHTML =
-          `Tiada rekod tepat untuk <strong>"${escapeHtml(rawQuery)}"</strong>. Memaparkan sehingga ${CLOSE_MATCH_LIMIT} rekod rasmi paling hampir di bawah istilah ${targetBadges}.`;
-        closeBanner.classList.remove('hidden');
-      } else {
-        closeBanner.classList.add('hidden');
-      }
-
-      // Kemas kini bilangan pada setiap pil kategori
-      const counts = {
-        ALL: matchedPool.length,
-        ASET_ALIH: 0,
-        ASET_TAK_ALIH: 0,
-        ASET_TAK_KETARA: 0,
-        STOK: 0
-      };
-      for (const item of matchedPool) {
-        if (counts[item.cat] !== undefined) counts[item.cat]++;
-      }
-      for (const key of Object.keys(counts)) {
-        const el = document.getElementById(`count-${key}`);
-        if (el) el.textContent = counts[key].toLocaleString();
-      }
-
-      // Tapis mengikut kategori yang dipilih
-      filteredRecords = currentCategory === 'ALL'
-        ? matchedPool
-        : matchedPool.filter((item) => item.cat === currentCategory);
-
-      visibleCount = PAGE_SIZE;
-      renderResults(rawQuery);
+      renderRecords([], false);
+      resultSummary.innerHTML = `Tiada rekod ditemui untuk "<strong>${escapeHtml(rawQuery)}</strong>"`;
     }
 
-    function loadMoreResults() {
-      visibleCount += PAGE_SIZE;
-      renderResults(document.getElementById('searchInput').value.trim());
+    function getBadgeStyle(jenis) {
+      if (jenis === 'Aset Alih') return 'bg-blue-50 text-blue-700 border-blue-200';
+      if (jenis === 'Aset Tak Alih') return 'bg-purple-50 text-purple-700 border-purple-200';
+      if (jenis === 'Aset Tak Ketara') return 'bg-amber-50 text-amber-700 border-amber-200';
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
 
-    function getCategoryStyle(cat) {
-      switch (cat) {
-        case 'ASET_ALIH':
-          return { label: 'Aset Alih', classes: 'bg-blue-50 text-blue-700 border-blue-200' };
-        case 'ASET_TAK_ALIH':
-          return { label: 'Aset Tak Alih', classes: 'bg-purple-50 text-purple-700 border-purple-200' };
-        case 'ASET_TAK_KETARA':
-          return { label: 'Aset Tak Ketara', classes: 'bg-rose-50 text-rose-700 border-rose-200' };
-        case 'STOK':
-          return { label: 'Stok', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-        default:
-          return { label: cat || 'Umum', classes: 'bg-slate-100 text-slate-700 border-slate-200' };
-      }
-    }
-
-    function renderResults(rawQuery) {
-      const grid = document.getElementById('resultsGrid');
-      const emptyState = document.getElementById('emptyState');
-      const loadMoreWrapper = document.getElementById('loadMoreWrapper');
-      const total = filteredRecords.length;
-
-      document.getElementById('totalMatchedCount').textContent = total.toLocaleString();
-
-      if (total === 0) {
-        grid.innerHTML = '';
-        grid.classList.add('hidden');
-        loadMoreWrapper.classList.add('hidden');
-        document.getElementById('showingCount').textContent = '0';
-        document.getElementById('pageIndicator').textContent = '';
-        document.getElementById('emptyQueryLabel').textContent = rawQuery;
+    function renderRecords(list, isFuzzy) {
+      resultsGrid.innerHTML = '';
+      if (!list || list.length === 0) {
         emptyState.classList.remove('hidden');
-        lucide.createIcons();
         return;
       }
-
       emptyState.classList.add('hidden');
-      grid.classList.remove('hidden');
 
-      const slice = filteredRecords.slice(0, visibleCount);
-      document.getElementById('showingCount').textContent = slice.length.toLocaleString();
-      document.getElementById('pageIndicator').textContent =
-        total > slice.length ? `Menunjukkan ${slice.length} teratas` : 'Semua rekod dipaparkan';
+      const fragment = document.createDocumentFragment();
+      list.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between card-hover';
 
-      grid.innerHTML = slice.map((rec) => {
-        const catMeta = getCategoryStyle(rec.cat);
-        const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' > ');
+        const desc = item.keterangan || 'Tiada keterangan tambahan.';
+        const isLong = desc.length > 130;
+        const shortDesc = isLong ? desc.slice(0, 130) + '...' : desc;
 
-        return `
-          <article class="bg-white rounded-2xl border ${isCloseMatchMode ? 'border-blue-200' : 'border-slate-200/90'} p-4 shadow-2xs hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between gap-3.5">
-            <div class="space-y-2.5">
-              <!-- Baris Atas: Kod & Lencana -->
-              <div class="flex flex-wrap items-center justify-between gap-1.5">
-                <span class="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                  ${escapeHtml(rec.code)}
-                </span>
-                <div class="flex items-center gap-1.5">
-                  ${isCloseMatchMode ? `
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-600 text-white">
-                      Padanan Hampir
-                    </span>
-                  ` : ''}
-                  <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${catMeta.classes}">
-                    ${catMeta.label}
-                  </span>
-                </div>
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-2.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="mono text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 border border-slate-200/80">${escapeHtml(item.kod)}</span>
+                ${isFuzzy ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">Padanan Hampir</span>` : ''}
               </div>
-
-              <!-- Perihal / Nama Item -->
-              <h2 class="font-bold text-sm sm:text-[15px] text-slate-900 leading-snug">
-                ${escapeHtml(rec.desc)}
-              </h2>
-
-              <!-- Hierarki Kelas -->
-              ${hierarchy ? `
-                <div class="text-[11px] font-medium text-slate-500 flex items-start gap-1.5">
-                  <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
-                  <span>${escapeHtml(hierarchy)}</span>
-                </div>
-              ` : ''}
-
-              <!-- Butiran / Spesifikasi -->
-              ${rec.detail ? `
-                <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">
-                  ${escapeHtml(rec.detail)}
-                </p>
-              ` : ''}
+              <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0 ${getBadgeStyle(item.jenis)}">${escapeHtml(item.jenis)}</span>
             </div>
 
-            <!-- Butang Salin Kod -->
-            <div class="pt-2 border-t border-slate-100 flex justify-end">
-              <button onclick="copyRecordCode('${escapeHtml(rec.code)}')"
-                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold transition cursor-pointer">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                <span>Salin Kod</span>
-              </button>
+            <h3 class="text-sm font-bold text-slate-900 leading-snug mb-1.5">${escapeHtml(item.nama)}</h3>
+            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-3 line-clamp-1" title="${escapeHtml(item.kategori)}">${escapeHtml(item.kategori)}</p>
+
+            <div class="text-xs text-slate-600 leading-relaxed mb-4">
+              <p id="desc-${idx}">${escapeHtml(shortDesc)}</p>
+              ${isLong ? `<button type="button" data-idx="${idx}" data-full="${escapeAttr(desc)}" data-short="${escapeAttr(shortDesc)}" class="toggle-desc mt-1 text-blue-600 hover:text-blue-800 font-semibold text-[11px]">Lihat penuh</button>` : ''}
             </div>
-          </article>
-        `;
-      }).join('');
-
-      loadMoreWrapper.classList.toggle('hidden', visibleCount >= total);
-      lucide.createIcons();
-    }
-
-    // =========================================================================
-    // 4. TETAPAN AI & FUNGSI "TANYA AI" (GEMINI 2.5 FLASH)
-    // =========================================================================
-    function getSavedGeminiKey() {
-      return (localStorage.getItem('aras_gemini_api_key') || '').trim();
-    }
-
-    function updateAiKeyIndicator() {
-      const dot = document.getElementById('aiKeyStatusDot');
-      if (getSavedGeminiKey()) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
-      } else {
-        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
-      }
-    }
-
-    function openAiSettingsModal() {
-      document.getElementById('geminiKeyInput').value = getSavedGeminiKey();
-      document.getElementById('aiSettingsModal').classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeAiSettingsModal() {
-      document.getElementById('aiSettingsModal').classList.add('hidden');
-    }
-
-    function saveGeminiKey() {
-      const val = document.getElementById('geminiKeyInput').value.trim();
-      if (!val) {
-        showToast('Sila masukkan Kunci API Google Gemini yang sah.');
-        return;
-      }
-      localStorage.setItem('aras_gemini_api_key', val);
-      updateAiKeyIndicator();
-      closeAiSettingsModal();
-      showToast('Kunci API Google Gemini berjaya disimpan.');
-    }
-
-    function clearGeminiKey() {
-      localStorage.removeItem('aras_gemini_api_key');
-      document.getElementById('geminiKeyInput').value = '';
-      updateAiKeyIndicator();
-      showToast('Kunci API telah dipadam.');
-    }
-
-    async function triggerAskAi() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        showToast('Sila taip nama barang dalam kotak carian dahulu.');
-        document.getElementById('searchInput').focus();
-        return;
-      }
-
-      const apiKey = getSavedGeminiKey();
-      if (!apiKey) {
-        openAiSettingsModal();
-        showToast('Sila masukkan Kunci API Gemini percuma anda dahulu.');
-        return;
-      }
-
-      const panel = document.getElementById('aiResponsePanel');
-      const content = document.getElementById('aiResponseContent');
-      panel.classList.remove('hidden');
-      content.innerHTML = `
-        <div class="flex items-center gap-2 text-blue-700 font-medium py-2">
-          <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
-          <span>Menganalisis pengelasan kod 1PP paling hampir untuk "${escapeHtml(query)}"...</span>
-        </div>
-      `;
-      lucide.createIcons();
-
-      const prompt = `Anda ialah pakar pengurusan aset dan stor Kerajaan Malaysia (1Pekeliling Perbendaharaan - 1PP) yang merujuk pangkalan data Perbendaharaan (MOF).
-Pengguna sedang mencari kod untuk barang: "${query}".
-Berikan jawapan dalam format JSON sah sahaja seperti struktur berikut:
-{
-  "kategori_1pp": "ASET ALIH atau STOK atau ASET TAK ALIH",
-  "penjelasan": "Penjelasan ringkas 1-2 ayat dalam Bahasa Melayu mengenai pengelasan 1PP dan padanan istilah rasmi MOF paling hampir.",
-  "kata_kunci_rasmi": ["KATA KUNCI 1", "KATA KUNCI 2", "KATA KUNCI 3"]
-}`;
-
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: 'application/json' }
-            })
-          }
-        );
-
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Gagal menghubungi pelayan Gemini AI');
-        }
-
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const parsed = JSON.parse(rawText);
-        const keywords = Array.isArray(parsed.kata_kunci_rasmi) ? parsed.kata_kunci_rasmi.slice(0, 3) : [];
-
-        content.innerHTML = `
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-bold">
-              ${escapeHtml(parsed.kategori_1pp || 'Cadangan 1PP')}
-            </span>
-            <span class="text-xs text-slate-500">Carian asal: <strong>${escapeHtml(query)}</strong></span>
           </div>
-          <p class="text-slate-700 leading-relaxed">${escapeHtml(parsed.penjelasan || '')}</p>
-          ${keywords.length > 0 ? `
-            <div class="pt-1 space-y-1.5">
-              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Klik kata kunci rasmi untuk mencari kod:</div>
-              <div class="flex flex-wrap gap-2">
-                ${keywords.map((kw) => `
-                  <button onclick="applyAiSuggestedKeyword('${escapeHtml(kw)}')"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-xs font-bold transition cursor-pointer">
-                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
-                    <span>${escapeHtml(kw)}</span>
-                  </button>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-        `;
-        lucide.createIcons();
-      } catch (err) {
-        content.innerHTML = `
-          <div class="text-rose-600 font-semibold">
-            Ralat: ${escapeHtml(err.message)}. Sila semak Kunci API anda di Tetapan AI.
+
+          <div class="pt-3 border-t border-slate-100 flex justify-end">
+            <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs font-semibold transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              Salin Kod
+            </button>
           </div>
         `;
-      }
+        fragment.appendChild(card);
+      });
+      resultsGrid.appendChild(fragment);
     }
 
-    function applyAiSuggestedKeyword(keyword) {
-      const input = document.getElementById('searchInput');
-      input.value = keyword;
-      runSearchAndFilter();
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+    function escapeAttr(str) {
+      return String(str || '').replace(/"/g, '&quot;');
     }
 
-    // =========================================================================
-    // 5. UTILITI SALIN KOD, TOAST & KESELAMATAN HTML
-    // =========================================================================
-    function copyRecordCode(code) {
-      const textarea = document.createElement('textarea');
-      textarea.value = code;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showToast(`Kod "${code}" berjaya disalin!`);
-    }
-
-    let toastTimeout = null;
     function showToast(msg) {
       const toast = document.getElementById('toast');
-      document.getElementById('toastMessage').textContent = msg;
+      document.getElementById('toastMsg').textContent = msg;
       toast.classList.remove('translate-y-20', 'opacity-0');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2600);
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2200);
     }
 
-    function escapeHtml(text) {
-      if (text === null || text === undefined) return '';
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+    resultsGrid.addEventListener('click', e => {
+      const copyBtn = e.target.closest('.copy-btn');
+      if (copyBtn) {
+        const kod = copyBtn.getAttribute('data-kod');
+        navigator.clipboard.writeText(kod);
+        showToast(`Kod ${kod} berjaya disalin!`);
+        return;
+      }
 
-    // Mulakan Aplikasi
-    window.addEventListener('DOMContentLoaded', () => {
-      lucide.createIcons();
-      loadTreasuryData();
+      const toggleBtn = e.target.closest('.toggle-desc');
+      if (toggleBtn) {
+        const idx = toggleBtn.getAttribute('data-idx');
+        const p = document.getElementById(`desc-${idx}`);
+        const expanded = toggleBtn.textContent === 'Ringkaskan';
+        p.textContent = expanded ? toggleBtn.getAttribute('data-short') : toggleBtn.getAttribute('data-full');
+        toggleBtn.textContent = expanded ? 'Lihat penuh' : 'Ringkaskan';
+      }
     });
+
+    document.getElementById('filterBar').addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+        b.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      btn.classList.remove('bg-slate-100', 'text-slate-600');
+      btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+      currentFilter = btn.getAttribute('data-filter');
+      performSearch();
+    });
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(performSearch, 250);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      performSearch();
+      searchInput.focus();
+    });
+
+    init();
   </script>
 </body>
 </html>
