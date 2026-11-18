@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARAS — Aplikasi Rujukan & Pengelasan Pintar Aset & Stok (1PP / MOF)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              900: '#0a192f',
+              800: '#112240',
+              700: '#1d3557',
+            },
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP OFFICIAL HEADER -->
+  <header class="bg-gradient-to-r from-[#0a192f] via-[#112240] to-[#1d3557] text-white shadow-lg border-b-4 border-amber-500 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <!-- Brand & Title -->
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
+            <i data-lucide="shield-check" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">ARAS</h1>
+              <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500 text-slate-950">
+                1PP / MOF
+              </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-300 font-medium">
+              Aplikasi Rujukan &amp; Pengelasan Pintar Aset Alih, Aset Tak Alih &amp; Stok Kerajaan
+            </p>
+          </div>
+        </div>
+
+        <!-- Live Sync Status & Controls -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button onclick="openStatusModal()" id="syncBadgeBtn"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs transition cursor-pointer text-left">
+            <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+            <div>
+              <div id="syncRecordCount" class="font-bold text-white leading-tight">Memuatkan data...</div>
+              <div id="syncTimestamp" class="text-[11px] text-slate-300 leading-tight">Menyemak data_terkini.json</div>
+            </div>
+          </button>
+
+          <button onclick="forceSyncData()" id="btnRefreshData" title="Segerak semula data terkini dari pelayan"
+            class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 transition cursor-pointer">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          </button>
+
+          <button onclick="openAiModal()"
+            class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-md transition cursor-pointer">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+            <span>Imbas Gambar / Kamera (AI)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+
+    <!-- SEARCH & FILTER PANEL -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-6 space-y-4">
+      <!-- Search Input Bar -->
+      <div class="relative flex items-center">
+        <div class="absolute left-4 text-slate-400 pointer-events-none">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </div>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Cari nama barang (BM / BI), kod 1PP, atau jenis peralatan... Cth: Kalkulator, Printer, Laptop, Kerusi, Aircond"
+          class="w-full pl-12 pr-28 py-3.5 text-sm sm:text-base bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition font-medium text-slate-900 placeholder:text-slate-400"
+          autocomplete="off"
+        />
+        <div class="absolute right-2.5 flex items-center gap-1.5">
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer" title="Padam carian">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+          <span id="synonymIndicator" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-semibold border border-blue-200">
+            <i data-lucide="sparkles" class="w-3 h-3"></i> Sinonim BM/BI
+          </span>
+        </div>
+      </div>
+
+      <!-- Category Pills & Sub-category Dropdown -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pt-1">
+        <!-- Category Pills -->
+        <div class="flex flex-wrap items-center gap-1.5" id="categoryPills">
+          <button data-cat="ALL" onclick="setCategoryFilter('ALL')"
+            class="cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0a192f] text-white shadow-xs transition cursor-pointer">
+            Semua (<span id="count-ALL">0</span>)
+          </button>
+          <button data-cat="ASET_ALIH" onclick="setCategoryFilter('ASET_ALIH')"
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-800 transition cursor-pointer">
+            Aset Alih (<span id="count-ASET_ALIH">0</span>)
+          </button>
+          <button data-cat="STOK" onclick="setCategoryFilter('STOK')"
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition cursor-pointer">
+            Stok (<span id="count-STOK">0</span>)
+          </button>
+          <button data-cat="ASET_TAK_ALIH" onclick="setCategoryFilter('ASET_TAK_ALIH')"
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-purple-50 hover:text-purple-800 transition cursor-pointer">
+            Aset Tak Alih (<span id="count-ASET_TAK_ALIH">0</span>)
+          </button>
+          <button data-cat="ASET_TAK_KETARA" onclick="setCategoryFilter('ASET_TAK_KETARA')"
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-800 transition cursor-pointer">
+            Aset Tak Ketara (<span id="count-ASET_TAK_KETARA">0</span>)
+          </button>
+        </div>
+
+        <!-- Sub-category (c1) Filter -->
+        <div class="flex items-center gap-2">
+          <label for="subCatSelect" class="text-xs font-semibold text-slate-500 shrink-0">Sub-Kategori:</label>
+          <select id="subCatSelect" onchange="applyFilters()"
+            class="w-full sm:w-64 px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800">
+            <option value="">Semua Sub-Kategori / Kelas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick Suggested Keywords -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs pt-1 border-t border-slate-100">
+        <span class="text-slate-400 font-medium mr-1">Carian pantas:</span>
+        <button onclick="quickSearch('Kalkulator')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Kalkulator</button>
+        <button onclick="quickSearch('Laptop')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Laptop / Komputer Riba</button>
+        <button onclick="quickSearch('Printer')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Printer / Pencetak</button>
+        <button onclick="quickSearch('Pendrive')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Pendrive</button>
+        <button onclick="quickSearch('Kerusi')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Kerusi</button>
+        <button onclick="quickSearch('Penyaman Udara')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Penyaman Udara</button>
+      </div>
+    </section>
+
+    <!-- DUAL-STATUS OVERLAP ADVISORY BANNER (ASET ALIH vs STOK) -->
+    <section id="overlapBanner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-2xl p-4 sm:p-5 shadow-sm">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <div class="space-y-1.5 text-xs sm:text-sm text-amber-950">
+          <h2 class="font-extrabold text-amber-900 flex items-center gap-2">
+            <span>Amaran Pengelasan Bertindih Dikesan (Aset Alih &amp; Stok)</span>
+            <span id="overlapStatsBadge" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-200/80 text-amber-900 font-bold"></span>
+          </h2>
+          <p class="leading-relaxed text-amber-900/90">
+            Item carian ini wujud dalam kedua-dua senarai <strong>Aset Alih</strong> dan <strong>Stok</strong> di portal Perbendaharaan. Sila rujuk peraturan <strong>1Pekeliling Perbendaharaan (1PP)</strong> sebelum mendaftar:
+          </p>
+          <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-xs">
+            <li class="bg-white/70 rounded-xl p-2.5 border border-amber-200/80">
+              <span class="font-bold text-emerald-800 block mb-0.5">✔ Daftar sebagai STOK (AM 6.1) jika:</span>
+              Barang guna habis, nilai rendah, kegunaan harian pejabat, atau alat ganti yang dipasang pada peralatan sedia ada (cth: kalkulator poket/meja biasa, pemacu pen, gunting, stapler).
+            </li>
+            <li class="bg-white/70 rounded-xl p-2.5 border border-amber-200/80">
+              <span class="font-bold text-blue-800 block mb-0.5">✔ Daftar sebagai ASET ALIH (AM 1.1) jika:</span>
+              Peralatan berkapasiti tinggi / tugas berat (<em>heavy-duty</em>), mempunyai ciri teknikal khas, jangka hayat panjang dan tidak luak digunakan (cth: mesin kira bercetak, mesin penebuk lubang industri).
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOLBAR: RESULT COUNT, VIEW SWITCHER & CSV EXPORT -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white px-4 py-3 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div class="text-xs sm:text-sm text-slate-600 font-medium">
+        Menunjukkan <span id="showingRange" class="font-bold text-slate-900">0</span> daripada
+        <span id="totalFilteredCount" class="font-bold text-blue-700">0</span> rekod padanan
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- View Switcher -->
+        <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+          <button id="btnViewCard" onclick="switchView('CARD')"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+            <span>Paparan Kad</span>
+          </button>
+          <button id="btnViewTable" onclick="switchView('TABLE')"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">
+            <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
+            <span>Jadual Penuh</span>
+          </button>
+        </div>
+
+        <!-- Export CSV -->
+        <button onclick="exportToCSV()"
+          class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          <span>Eksport CSV</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- LOADING SKELETON / INITIAL STATE -->
+    <div id="loadingState" class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+      <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-spin">
+        <i data-lucide="loader-2" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Menyegerak Pangkalan Data Rasmi MOF...</h3>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+        Sedang memuat turun indeks kod aset &amp; stok terkini daripada <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">data_terkini.json</code>.
+      </p>
+    </div>
+
+    <!-- EMPTY SEARCH STATE -->
+    <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+      <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+        <i data-lucide="search-x" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Tiada Rekod Padanan Ditemui</h3>
+      <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+        Cuba gunakan kata kunci yang lebih umum dalam Bahasa Melayu atau Bahasa Inggeris, atau tukar penapis kategori di atas.
+      </p>
+      <button onclick="clearSearch()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition cursor-pointer">
+        Set Semula Carian
+      </button>
+    </div>
+
+    <!-- CARD GRID VIEW -->
+    <div id="cardGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+    <!-- FULL TABLE VIEW -->
+    <div id="tableViewContainer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-900 text-white text-xs uppercase tracking-wider">
+              <th class="py-3.5 px-4 font-bold">Kod 1PP</th>
+              <th class="py-3.5 px-4 font-bold">Kategori</th>
+              <th class="py-3.5 px-4 font-bold">Perihal / Nama Item</th>
+              <th class="py-3.5 px-4 font-bold">Kelas / Sub-Kategori</th>
+              <th class="py-3.5 px-4 font-bold text-right">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGINATION BAR -->
+    <div id="paginationBar" class="hidden flex flex-col sm:flex-row items-center justify-between gap-3 bg-white px-4 py-3.5 rounded-2xl border border-slate-200 shadow-xs">
+      <div class="text-xs text-slate-600 font-medium">
+        Halaman <span id="currentPageLabel" class="font-bold text-slate-900">1</span> daripada
+        <span id="totalPagesLabel" class="font-bold text-slate-900">1</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnPrevPage" onclick="changePage(-1)"
+          class="flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold text-slate-700 transition cursor-pointer">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i> Sebelum
+        </button>
+        <button id="btnNextPage" onclick="changePage(1)"
+          class="flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold text-slate-700 transition cursor-pointer">
+          Seterusnya <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 mt-10 py-5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div>
+        <strong>ARAS (1PP / MOF)</strong> &mdash; Sistem Rujukan Pantas Pengurusan Aset &amp; Stor Kerajaan Malaysia.
+      </div>
+      <div>
+        Sumber Data Rasmi: <a href="https://knowledgebase.treasury.gov.my/kb/" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-medium">Knowledgebase Perbendaharaan Malaysia</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL 1: OFFICIAL MOF IMAGE PREVIEW & ITEM DETAILS -->
+  <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeModal('imageModal')">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200" onclick="event.stopPropagation()">
+      <div class="bg-[#0a192f] text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="font-bold text-sm sm:text-base">Rujukan Visual Rasmi Perbendaharaan</h3>
+        </div>
+        <button onclick="closeModal('imageModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-center min-h-[220px] relative">
+          <img id="modalPreviewImg" src="" alt="Gambar Rujukan Rasmi MOF"
+            class="max-h-64 w-auto object-contain rounded-lg hidden"
+            onload="this.classList.remove('hidden'); document.getElementById('modalImgFallback').classList.add('hidden');"
+            onerror="this.classList.add('hidden'); document.getElementById('modalImgFallback').classList.remove('hidden');" />
+          <div id="modalImgFallback" class="text-center space-y-2 py-6">
+            <div class="w-12 h-12 rounded-full bg-slate-200/80 text-slate-400 flex items-center justify-center mx-auto">
+              <i data-lucide="image-off" class="w-6 h-6"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-600">Tiada Gambar Rujukan di Pelayan MOF</p>
+            <p class="text-[11px] text-slate-400 max-w-xs mx-auto">
+              Item ini belum mempunyai muat naik gambar rasmi di portal Knowledgebase Perbendaharaan.
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-2 text-xs sm:text-sm">
+          <div class="flex items-center justify-between gap-2">
+            <span id="modalItemCode" class="font-mono font-extrabold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200"></span>
+            <span id="modalItemCat" class="px-2.5 py-1 rounded-lg text-xs font-bold"></span>
+          </div>
+          <h4 id="modalItemDesc" class="font-bold text-slate-900 text-base leading-snug"></h4>
+          <p id="modalItemHierarchy" class="text-xs text-slate-500 font-medium"></p>
+          <div id="modalItemDetailBox" class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs text-slate-700 leading-relaxed"></div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="modalCopyBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Salin Kod Rasmi
+          </button>
+          <button onclick="closeModal('imageModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: AI CAMERA / IMAGE SCANNER (GEMINI VISION) -->
+  <div id="aiModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" onclick="closeModal('aiModal')">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 my-8" onclick="event.stopPropagation()">
+      <div class="bg-gradient-to-r from-[#0a192f] to-[#1d3557] text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="font-bold text-sm sm:text-base">Imbas Objek dengan AI (Gemini Vision)</h3>
+        </div>
+        <button onclick="closeModal('aiModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Ambil gambar barang pejabat/peralatan menggunakan kamera telefon atau muat naik gambar. AI akan mengenal pasti nama item serta mencadangkan pengelasan <strong>Aset Alih</strong> atau <strong>Stok</strong>.
+        </p>
+
+        <!-- Gemini API Key Setup -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="geminiApiKeyInput" class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i>
+              Kunci API Google Gemini (Percuma RM0)
+            </label>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[11px] text-blue-600 hover:underline font-semibold">
+              Dapatkan Kunci Percuma &rarr;
+            </a>
+          </div>
+          <div class="flex gap-2">
+            <input type="password" id="geminiApiKeyInput" placeholder="Tampal AIzaSy... di sini"
+              class="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" />
+            <button onclick="saveGeminiKey()" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
+              Simpan
+            </button>
+          </div>
+        </div>
+
+        <!-- Camera / Upload Dropzone -->
+        <div class="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-5 text-center space-y-3 bg-slate-50/50 transition">
+          <input type="file" id="aiImageInput" accept="image/*" capture="environment" class="hidden" onchange="handleAiImageSelect(event)" />
+          <div id="aiImagePreviewWrapper" class="hidden">
+            <img id="aiImagePreview" src="" alt="Pratonton Imbasan" class="max-h-48 mx-auto rounded-xl shadow-sm border border-slate-200" />
+          </div>
+          <div id="aiUploadPlaceholder" class="space-y-1.5 py-2">
+            <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
+              <i data-lucide="camera" class="w-5 h-5"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-800">Klik butang di bawah untuk buka kamera atau pilih fail gambar</p>
+            <p class="text-[11px] text-slate-400">Menyokong JPG, PNG, WEBP</p>
+          </div>
+          <div class="flex flex-wrap justify-center gap-2">
+            <button onclick="document.getElementById('aiImageInput').click()"
+              class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5">
+              <i data-lucide="upload" class="w-3.5 h-3.5"></i> Pilih Gambar / Kamera
+            </button>
+            <button id="btnAnalyzeAi" onclick="analyzeImageWithGemini()" disabled
+              class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analisis Sekarang
+            </button>
+          </div>
+        </div>
+
+        <!-- AI Result Box -->
+        <div id="aiResultBox" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2 text-xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: DATA STATUS & MANUAL FALLBACK UPLOAD -->
+  <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" onclick="closeModal('statusModal')">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 my-8" onclick="event.stopPropagation()">
+      <div class="bg-[#0a192f] text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-emerald-400"></i>
+          <h3 class="font-bold text-sm sm:text-base">Status Pangkalan Data ARAS</h3>
+        </div>
+        <button onclick="closeModal('statusModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs sm:text-sm">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Sumber Utama:</span>
+            <span class="font-bold text-slate-900">Automasi GitHub (data_terkini.json)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Kemaskini Terakhir:</span>
+            <span id="modalUpdatedAt" class="font-bold text-blue-700">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Fail Sumber Aset:</span>
+            <span id="modalAsetSource" class="font-mono text-xs text-slate-800">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Fail Sumber Stok:</span>
+            <span id="modalStokSource" class="font-mono text-xs text-slate-800">-</span>
+          </div>
+          <div class="flex justify-between pt-1 border-t border-slate-200">
+            <span class="text-slate-600 font-semibold">Jumlah Keseluruhan Rekod:</span>
+            <span id="modalTotalRecords" class="font-extrabold text-emerald-700">0</span>
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-2 border-t border-slate-200">
+          <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pilihan Sandaran Manual (Jika Guna Offline Tanpa Internet)</h4>
+          <p class="text-xs text-slate-500">
+            Secara automatik, laman web ini sentiasa menarik data terkini dari GitHub. Namun, anda juga boleh memuat naik fail <code class="bg-slate-100 px-1 rounded">.txt</code> mentah MOF secara manual di bawah jika perlu:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <label class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer transition">
+              <i data-lucide="file-up" class="w-4 h-4 text-blue-600"></i>
+              <span>Muat Naik Kod Aset (.txt)</span>
+              <input type="file" accept=".txt,.sql" class="hidden" onchange="handleManualSqlUpload(event, 'ASET')" />
+            </label>
+            <label class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer transition">
+              <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i>
+              <span>Muat Naik Kod Stok (.txt)</span>
+              <input type="file" accept=".txt,.sql" class="hidden" onchange="handleManualSqlUpload(event, 'STOK')" />
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-2">
+          <button onclick="forceSyncData(); closeModal('statusModal');"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Segerak Sekarang
+          </button>
+          <button onclick="closeModal('statusModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+      <span id="toastMsg">Kod berjaya disalin!</span>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPT -->
+  <script>
+    // =========================================================================
+    // 1. STATE & BILINGUAL SYNONYM DICTIONARY (BM <-> EN)
+    // =========================================================================
+    const DB_NAME = 'ARAS_MOF_DB';
+    const STORE_NAME = 'aras_cache';
+    const PAGE_SIZE = 48;
+
+    let allRecords = [];
+    let filteredRecords = [];
+    let currentCategory = 'ALL';
+    let currentView = 'CARD'; // 'CARD' | 'TABLE'
+    let currentPage = 1;
+    let metadataInfo = {
+      updated_at: '-',
+      aset_source: '-',
+      stok_source: '-',
+      total: 0
+    };
+    let selectedAiImageBase64 = null;
+    let selectedAiImageMime = 'image/jpeg';
+
+    const SYNONYM_GROUPS = [
+      ['kalkulator', 'calculator', 'mesin kira'],
+      ['laptop', 'komputer riba', 'notebook'],
+      ['komputer', 'computer', 'pc', 'desktop'],
+      ['printer', 'pencetak', 'mesin cetak'],
+      ['scanner', 'pengimbas'],
+      ['fotostat', 'photostat', 'mesin penyalin', 'copier'],
+      ['projektor', 'projector'],
+      ['monitor', 'paparan', 'skrin', 'screen'],
+      ['tetikus', 'mouse'],
+      ['papan kekunci', 'keyboard'],
+      ['pendrive', 'pemacu pen', 'thumbdrive', 'flash drive', 'usb'],
+      ['cakera keras', 'hard disk', 'hdd', 'ssd'],
+      ['kerusi', 'chair', 'seat', 'bangku'],
+      ['meja', 'table', 'desk'],
+      ['almari', 'kabinet', 'cabinet', 'rak', 'shelf', 'locker'],
+      ['penyaman udara', 'aircond', 'air cond', 'pendingin hawa', 'hawa dingin', 'air conditioner'],
+      ['kipas', 'fan'],
+      ['lampu', 'lamp', 'mentol', 'bulb', 'spotlight'],
+      ['kertas', 'paper', 'a4', 'a3'],
+      ['pen', 'ballpoint', 'penanda', 'marker'],
+      ['pensel', 'pencil'],
+      ['gunting', 'scissors'],
+      ['stapler', 'pengokot', 'dawai kokot'],
+      ['penebuk lubang', 'puncher', 'hole punch'],
+      ['fail', 'file', 'folder'],
+      ['katrij', 'cartridge', 'toner', 'dakwat', 'ink'],
+      ['gerudi', 'drill'],
+      ['tukul', 'hammer'],
+      ['pemutar skru', 'screwdriver'],
+      ['playar', 'pliers'],
+      ['gergaji', 'saw'],
+      ['tangga', 'ladder'],
+      ['peti sejuk', 'refrigerator', 'fridge', 'freezer'],
+      ['ketuhar', 'microwave', 'oven'],
+      ['televisyen', 'television', 'tv'],
+      ['kamera', 'camera', 'cctv'],
+      ['telefon', 'phone', 'telephone', 'smartphone'],
+      ['bateri', 'battery'],
+      ['kereta', 'car', 'kenderaan', 'mpv', 'suv', 'sedan', 'van', 'lori', 'bas', 'motosikal']
+    ];
+
+    // =========================================================================
+    // 2. INDEXEDDB CACHE MANAGEMENT
+    // =========================================================================
+    function openArasDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveToCache(payload) {
+      try {
+        const db = await openArasDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(payload, 'latest_dataset');
+      } catch (err) {
+        console.warn('Cache simpanan gagal:', err);
+      }
+    }
+
+    async function loadFromCache() {
+      try {
+        const db = await openArasDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).get('latest_dataset');
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      } catch {
+        return null;
+      }
+    }
+
+    // =========================================================================
+    // 3. AUTOMATIC DATA SYNC FROM data_terkini.json
+    // =========================================================================
+    async function initAppData() {
+      // 1. Load cached data immediately if available for instant UX
+      const cached = await loadFromCache();
+      if (cached && Array.isArray(cached.records) && cached.records.length > 0) {
+        applyDataset(cached, true);
+      }
+
+      // 2. Fetch fresh data_terkini.json from GitHub repository
+      await fetchLatestJsonFromServer(!cached);
+    }
+
+    async function fetchLatestJsonFromServer(showLoader = false) {
+      const syncDot = document.getElementById('syncDot');
+      const syncTimestamp = document.getElementById('syncTimestamp');
+      const refreshBtnIcon = document.querySelector('#btnRefreshData svg');
+
+      if (showLoader) {
+        document.getElementById('loadingState').classList.remove('hidden');
+      }
+      if (refreshBtnIcon) refreshBtnIcon.classList.add('animate-spin');
+      syncDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0';
+
+      try {
+        const response = await fetch(`./data_terkini.json?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && Array.isArray(data.records) && data.records.length > 0) {
+          await saveToCache(data);
+          applyDataset(data, false);
+        } else {
+          throw new Error('Struktur JSON kosong');
+        }
+      } catch (err) {
+        console.warn('Tidak dapat mencapai data_terkini.json:', err);
+        if (allRecords.length > 0) {
+          syncDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+          syncTimestamp.textContent = `Cache Offline • ${metadataInfo.updated_at}`;
+        } else {
+          document.getElementById('loadingState').classList.add('hidden');
+          syncDot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0';
+          document.getElementById('syncRecordCount').textContent = 'Tiada Data Ditemui';
+          syncTimestamp.textContent = 'Klik untuk muat naik .txt manual';
+          showToast('Fail data_terkini.json belum tersedia. Klik status data di atas untuk muat naik manual.');
+        }
+      } finally {
+        if (refreshBtnIcon) refreshBtnIcon.classList.remove('animate-spin');
+      }
+    }
+
+    async function forceSyncData() {
+      showToast('Menyegerak data terkini daripada pelayan...');
+      await fetchLatestJsonFromServer(allRecords.length === 0);
+      if (allRecords.length > 0) {
+        showToast(`Selesai! ${allRecords.length.toLocaleString()} kod rasmi terkini sedia digunakan.`);
+      }
+    }
+
+    function applyDataset(data, isFromCache) {
+      allRecords = data.records || [];
+      metadataInfo = {
+        updated_at: data.updated_at || 'Terkini',
+        aset_source: data.aset_source || 'dump_asset.cfm',
+        stok_source: data.stok_source || 'dump_stock.cfm',
+        total: allRecords.length
+      };
+
+      // Update Header Badge
+      const syncDot = document.getElementById('syncDot');
+      syncDot.className = isFromCache
+        ? 'w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0'
+        : 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
+
+      document.getElementById('syncRecordCount').textContent = `${allRecords.length.toLocaleString()} Kod Rasmi Aktif`;
+      document.getElementById('syncTimestamp').textContent = `Kemaskini: ${metadataInfo.updated_at}`;
+
+      // Update Status Modal Metadata
+      document.getElementById('modalUpdatedAt').textContent = metadataInfo.updated_at;
+      document.getElementById('modalAsetSource').textContent = metadataInfo.aset_source;
+      document.getElementById('modalStokSource').textContent = metadataInfo.stok_source;
+      document.getElementById('modalTotalRecords').textContent = `${allRecords.length.toLocaleString()} rekod`;
+
+      document.getElementById('loadingState').classList.add('hidden');
+      applyFilters();
+    }
+
+    // =========================================================================
+    // 4. SMART SEARCH, SYNONYM EXPANSION & OVERLAP DETECTION
+    // =========================================================================
+    function expandQueryWithSynonyms(rawQuery) {
+      const cleaned = rawQuery.toLowerCase().trim();
+      if (!cleaned) return [];
+
+      const tokens = cleaned.split(/\s+/).filter(Boolean);
+      const expandedGroups = tokens.map((token) => {
+        const variants = new Set([token]);
+        for (const group of SYNONYM_GROUPS) {
+          if (group.some((word) => word === token || (token.length >= 4 && word.includes(token)))) {
+            group.forEach((w) => variants.add(w));
+          }
+        }
+        return Array.from(variants);
+      });
+
+      return expandedGroups;
+    }
+
+    let searchDebounceTimer = null;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyFilters();
+      }, 160);
+    });
+
+    function quickSearch(term) {
+      const input = document.getElementById('searchInput');
+      input.value = term;
+      applyFilters();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      currentCategory = 'ALL';
+      document.getElementById('subCatSelect').value = '';
+      updateCategoryPillStyles();
+      applyFilters();
+    }
+
+    function setCategoryFilter(cat) {
+      currentCategory = cat;
+      updateCategoryPillStyles();
+      applyFilters(false);
+    }
+
+    function updateCategoryPillStyles() {
+      document.querySelectorAll('.cat-pill').forEach((btn) => {
+        const isTarget = btn.dataset.cat === currentCategory;
+        if (isTarget) {
+          btn.className = 'cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0a192f] text-white shadow-xs transition cursor-pointer';
+        } else {
+          btn.className = 'cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
+        }
+      });
+    }
+
+    function applyFilters(refreshSubCategories = true) {
+      const rawQuery = document.getElementById('searchInput').value.trim();
+      const selectedSubCat = document.getElementById('subCatSelect').value;
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const synBadge = document.getElementById('synonymIndicator');
+
+      if (rawQuery.length > 0) {
+        clearBtn.classList.remove('hidden');
+        synBadge.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+        synBadge.classList.add('hidden');
+      }
+
+      const tokenGroups = expandQueryWithSynonyms(rawQuery);
+      const rawLower = rawQuery.toLowerCase();
+
+      // Step 1: Filter by search query (across all categories first to compute counts & overlap)
+      const queryMatched = rawQuery === ''
+        ? allRecords
+        : allRecords.filter((rec) => {
+            const hay = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
+            if (rec.code.toLowerCase().includes(rawLower)) return true;
+            return tokenGroups.every((variants) => variants.some((v) => hay.includes(v)));
+          });
+
+      // Step 2: Update Category Counts & Overlap Banner
+      const counts = {
+        ALL: queryMatched.length,
+        ASET_ALIH: 0,
+        STOK: 0,
+        ASET_TAK_ALIH: 0,
+        ASET_TAK_KETARA: 0
+      };
+      for (const r of queryMatched) {
+        if (counts[r.cat] !== undefined) counts[r.cat]++;
+      }
+
+      for (const key of Object.keys(counts)) {
+        const el = document.getElementById(`count-${key}`);
+        if (el) el.textContent = counts[key].toLocaleString();
+      }
+
+      const overlapBanner = document.getElementById('overlapBanner');
+      if (rawQuery.length >= 2 && counts.ASET_ALIH > 0 && counts.STOK > 0) {
+        overlapBanner.classList.remove('hidden');
+        document.getElementById('overlapStatsBadge').textContent =
+          `${counts.ASET_ALIH} Aset Alih • ${counts.STOK} Stok`;
+      } else {
+        overlapBanner.classList.add('hidden');
+      }
+
+      // Step 3: Filter by Category Pill
+      let catFiltered = currentCategory === 'ALL'
+        ? queryMatched
+        : queryMatched.filter((r) => r.cat === currentCategory);
+
+      // Step 4: Populate Sub-Category Dropdown dynamically
+      if (refreshSubCategories) {
+        const subCatSelect = document.getElementById('subCatSelect');
+        const prevVal = subCatSelect.value;
+        const subMap = new Map();
+        for (const r of catFiltered) {
+          if (r.c1) subMap.set(r.c1, (subMap.get(r.c1) || 0) + 1);
+        }
+        const sortedSubs = Array.from(subMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        subCatSelect.innerHTML = `<option value="">Semua Sub-Kategori / Kelas (${sortedSubs.length})</option>` +
+          sortedSubs.map(([name, cnt]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (${cnt})</option>`).join('');
+        if (subMap.has(prevVal)) {
+          subCatSelect.value = prevVal;
+        }
+      }
+
+      const activeSub = document.getElementById('subCatSelect').value;
+      if (activeSub) {
+        catFiltered = catFiltered.filter((r) => r.c1 === activeSub);
+      }
+
+      filteredRecords = catFiltered;
+      currentPage = 1;
+      renderResults();
+    }
+
+    // =========================================================================
+    // 5. RENDERING (CARDS, FULL TABLE & PAGINATION)
+    // =========================================================================
+    function switchView(mode) {
+      currentView = mode;
+      const btnCard = document.getElementById('btnViewCard');
+      const btnTable = document.getElementById('btnViewTable');
+
+      if (mode === 'CARD') {
+        btnCard.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+      } else {
+        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
+        btnCard.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
+      }
+      renderResults();
+    }
+
+    function changePage(delta) {
+      const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+      currentPage = Math.min(totalPages, Math.max(1, currentPage + delta));
+      renderResults();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function getCategoryMeta(cat) {
+      switch (cat) {
+        case 'ASET_ALIH':
+          return { label: 'Aset Alih', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200' };
+        case 'STOK':
+          return { label: 'Stok', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+        case 'ASET_TAK_ALIH':
+          return { label: 'Aset Tak Alih', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+        case 'ASET_TAK_KETARA':
+          return { label: 'Aset Tak Ketara', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' };
+        default:
+          return { label: cat, badgeClass: 'bg-slate-100 text-slate-700 border-slate-200' };
+      }
+    }
+
+    function renderResults() {
+      const total = filteredRecords.length;
+      const cardContainer = document.getElementById('cardGridContainer');
+      const tableContainer = document.getElementById('tableViewContainer');
+      const emptyState = document.getElementById('emptyState');
+      const paginationBar = document.getElementById('paginationBar');
+
+      document.getElementById('totalFilteredCount').textContent = total.toLocaleString();
+
+      if (total === 0) {
+        cardContainer.innerHTML = '';
+        document.getElementById('tableBody').innerHTML = '';
+        cardContainer.classList.add('hidden');
+        tableContainer.classList.add('hidden');
+        paginationBar.classList.add('hidden');
+        document.getElementById('showingRange').textContent = '0';
+        if (allRecords.length > 0) emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const startIdx = (currentPage - 1) * PAGE_SIZE;
+      const endIdx = Math.min(startIdx + PAGE_SIZE, total);
+      const pageSlice = filteredRecords.slice(startIdx, endIdx);
+
+      document.getElementById('showingRange').textContent = `${(startIdx + 1).toLocaleString()}–${endIdx.toLocaleString()}`;
+      document.getElementById('currentPageLabel').textContent = currentPage.toLocaleString();
+      document.getElementById('totalPagesLabel').textContent = totalPages.toLocaleString();
+      document.getElementById('btnPrevPage').disabled = currentPage <= 1;
+      document.getElementById('btnNextPage').disabled = currentPage >= totalPages;
+      paginationBar.classList.toggle('hidden', totalPages <= 1);
+
+      if (currentView === 'CARD') {
+        tableContainer.classList.add('hidden');
+        cardContainer.classList.remove('hidden');
+
+        cardContainer.innerHTML = pageSlice.map((rec, idx) => {
+          const meta = getCategoryMeta(rec.cat);
+          const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ');
+          const globalIndex = startIdx + idx;
+          return `
+            <article class="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md hover:border-blue-300 transition p-4 flex flex-col justify-between gap-3.5">
+              <div class="space-y-2.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                    ${escapeHtml(rec.code)}
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${meta.badgeClass}">
+                    ${meta.label}
+                  </span>
+                </div>
+
+                <h3 class="font-bold text-sm sm:text-[15px] text-slate-900 leading-snug">
+                  ${escapeHtml(rec.desc)}
+                </h3>
+
+                ${hierarchy ? `
+                  <p class="text-[11px] font-medium text-slate-500 flex items-start gap-1">
+                    <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
+                    <span>${escapeHtml(hierarchy)}</span>
+                  </p>
+                ` : ''}
+
+                ${rec.detail ? `
+                  <p class="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    ${escapeHtml(rec.detail)}
+                  </p>
+                ` : ''}
+              </div>
+
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                <button onclick="openItemPreview(${globalIndex})"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold transition cursor-pointer">
+                  <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                  <span>Gambar &amp; Butiran</span>
+                </button>
+                <button onclick="copyCode('${escapeHtml(rec.code)}')"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>Salin Kod</span>
+                </button>
+              </div>
+            </article>
+          `;
+        }).join('');
+      } else {
+        cardContainer.classList.add('hidden');
+        tableContainer.classList.remove('hidden');
+
+        document.getElementById('tableBody').innerHTML = pageSlice.map((rec, idx) => {
+          const meta = getCategoryMeta(rec.cat);
+          const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ') || '-';
+          const globalIndex = startIdx + idx;
+          return `
+            <tr class="hover:bg-blue-50/40 transition">
+              <td class="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(rec.code)}</td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${meta.badgeClass}">${meta.label}</span>
+              </td>
+              <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(rec.desc)}</td>
+              <td class="py-3 px-4 text-slate-500 text-xs">${escapeHtml(hierarchy)}</td>
+              <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                <button onclick="openItemPreview(${globalIndex})" title="Lihat Gambar & Butiran"
+                  class="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 transition cursor-pointer inline-flex">
+                  <i data-lucide="image" class="w-4 h-4"></i>
+                </button>
+                <button onclick="copyCode('${escapeHtml(rec.code)}')" title="Salin Kod"
+                  class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-1">
+                  <i data-lucide="copy" class="w-3 h-3"></i> Salin
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      lucide.createIcons();
+    }
+
+    // =========================================================================
+    // 6. OFFICIAL MOF IMAGE PREVIEW MODAL
+    // =========================================================================
+    function openItemPreview(filteredIndex) {
+      const rec = filteredRecords[filteredIndex];
+      if (!rec) return;
+
+      const meta = getCategoryMeta(rec.cat);
+      const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ');
+
+      document.getElementById('modalItemCode').textContent = rec.code;
+      const catEl = document.getElementById('modalItemCat');
+      catEl.textContent = meta.label;
+      catEl.className = `px-2.5 py-1 rounded-lg text-xs font-bold border ${meta.badgeClass}`;
+      document.getElementById('modalItemDesc').textContent = rec.desc;
+      document.getElementById('modalItemHierarchy').textContent = hierarchy || 'Kategori Umum 1PP';
+
+      const detailBox = document.getElementById('modalItemDetailBox');
+      if (rec.detail) {
+        detailBox.textContent = rec.detail;
+        detailBox.classList.remove('hidden');
+      } else {
+        detailBox.classList.add('hidden');
+      }
+
+      document.getElementById('modalCopyBtn').onclick = () => copyCode(rec.code);
+
+      // Load official MOF image using item ID
+      const imgEl = document.getElementById('modalPreviewImg');
+      const fallbackEl = document.getElementById('modalImgFallback');
+      imgEl.classList.add('hidden');
+      fallbackEl.classList.add('hidden');
+
+      if (rec.id) {
+        const folder = rec.cat === 'STOK' ? 'stok' : 'asset';
+        imgEl.src = `https://knowledgebase.treasury.gov.my/kb_reference/images/${folder}/${encodeURIComponent(rec.id)}.png`;
+      } else {
+        fallbackEl.classList.remove('hidden');
+      }
+
+      openModal('imageModal');
+    }
+
+    // =========================================================================
+    // 7. GEMINI AI VISION SCANNER
+    // =========================================================================
+    function openAiModal() {
+      const savedKey = localStorage.getItem('aras_gemini_api_key') || '';
+      document.getElementById('geminiApiKeyInput').value = savedKey;
+      openModal('aiModal');
+    }
+
+    function saveGeminiKey() {
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      if (!key) {
+        showToast('Sila masukkan Kunci API Google Gemini yang sah.');
+        return;
+      }
+      localStorage.setItem('aras_gemini_api_key', key);
+      showToast('Kunci API Google Gemini berjaya disimpan!');
+    }
+
+    function handleAiImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      selectedAiImageMime = file.type || 'image/jpeg';
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        selectedAiImageBase64 = dataUrl.split(',')[1];
+        document.getElementById('aiImagePreview').src = dataUrl;
+        document.getElementById('aiImagePreviewWrapper').classList.remove('hidden');
+        document.getElementById('aiUploadPlaceholder').classList.add('hidden');
+        document.getElementById('btnAnalyzeAi').disabled = false;
+        document.getElementById('aiResultBox').classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function analyzeImageWithGemini() {
+      const apiKey = (document.getElementById('geminiApiKeyInput').value || localStorage.getItem('aras_gemini_api_key') || '').trim();
+      if (!apiKey) {
+        showToast('Sila masukkan Kunci API Google Gemini percuma anda dahulu.');
+        document.getElementById('geminiApiKeyInput').focus();
+        return;
+      }
+      if (!selectedAiImageBase64) return;
+
+      const btn = document.getElementById('btnAnalyzeAi');
+      const resultBox = document.getElementById('aiResultBox');
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Menganalisis...`;
+      lucide.createIcons();
+
+      const prompt = `Anda ialah pakar pengurusan aset dan stor Kerajaan Malaysia (1Pekeliling Perbendaharaan - 1PP).
+Kenal pasti objek utama dalam gambar ini dan jawab dalam format JSON sahaja:
+{
+  "nama_bm": "Nama rasmi barang dalam Bahasa Melayu (1-3 perkataan)",
+  "nama_en": "Nama barang dalam Bahasa Inggeris",
+  "cadangan_kategori": "ASET ALIH atau STOK atau ASET TAK ALIH",
+  "sebab": "Penerangan ringkas 1 ayat mengikut peraturan 1PP"
+}`;
+
+      try {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inline_data: { mime_type: selectedAiImageMime, data: selectedAiImageBase64 } }
+              ]
+            }],
+            generationConfig: { responseMimeType: 'application/json' }
+          })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error?.message || 'Ralat panggilan Gemini API');
+
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        const parsed = JSON.parse(rawText);
+
+        resultBox.innerHTML = `
+          <div class="font-bold text-blue-950 text-sm">Objek Dikesan: ${escapeHtml(parsed.nama_bm || '')} (${escapeHtml(parsed.nama_en || '')})</div>
+          <div class="text-blue-900"><strong>Cadangan 1PP:</strong> ${escapeHtml(parsed.cadangan_kategori || '')} &mdash; ${escapeHtml(parsed.sebab || '')}</div>
+          <div class="pt-1">
+            <button onclick="quickSearch('${escapeHtml(parsed.nama_bm || parsed.nama_en || '')}'); closeModal('aiModal');"
+              class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer">
+              Cari "${escapeHtml(parsed.nama_bm || '')}" dalam ARAS &rarr;
+            </button>
+          </div>
+        `;
+        resultBox.classList.remove('hidden');
+      } catch (err) {
+        resultBox.innerHTML = `<div class="text-rose-700 font-semibold">Gagal menganalisis gambar: ${escapeHtml(err.message)}</div>`;
+        resultBox.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analisis Semula`;
+        lucide.createIcons();
+      }
+    }
+
+    // =========================================================================
+    // 8. MANUAL SQL FALLBACK PARSER (OPTIONAL) & CSV EXPORT
+    // =========================================================================
+    function handleManualSqlUpload(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      showToast(`Memproses fail ${file.name}...`);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target.result;
+        const extracted = [];
+
+        if (type === 'ASET') {
+          const tuples = extractSqlTuples(text, 'code_005');
+          for (const r of tuples) {
+            if (!r[1] || !r[2]) continue;
+            const upper = r[2].toUpperCase();
+            const cat = upper.includes('ASET TAK ALIH') ? 'ASET_TAK_ALIH' :
+                        upper.includes('ASET TAK KETARA') ? 'ASET_TAK_KETARA' :
+                        upper.includes('(STOK)') ? 'STOK' : 'ASET_ALIH';
+            extracted.push({
+              id: r[0],
+              code: r[1].trim(),
+              desc: r[2].trim(),
+              cat,
+              c1: r[3] || '',
+              c2: '',
+              detail: (r[10] || '').replace(/<[^>]*>/g, ' ').trim()
+            });
+          }
+          const nonAset = allRecords.filter((x) => x.cat === 'STOK');
+          allRecords = [...extracted, ...nonAset];
+        } else {
+          const tuples = extractSqlTuples(text, 'sps_stok_class4');
+          for (const r of tuples) {
+            if (!r[2]) continue;
+            extracted.push({
+              id: r[0],
+              code: (r[6] || `${r[3]}${r[4]}${r[5]}${r[1]}`).trim(),
+              desc: r[2].trim(),
+              cat: 'STOK',
+              c1: r[3] || '',
+              c2: r[4] || '',
+              detail: (r[21] || '').replace(/<[^>]*>/g, ' ').trim()
+            });
+          }
+          const nonStok = allRecords.filter((x) => x.cat !== 'STOK');
+          allRecords = [...nonStok, ...extracted];
+        }
+
+        const payload = {
+          updated_at: `Manual (${new Date().toLocaleDateString('ms-MY')})`,
+          aset_source: type === 'ASET' ? file.name : metadataInfo.aset_source,
+          stok_source: type === 'STOK' ? file.name : metadataInfo.stok_source,
+          total: allRecords.length,
+          records: allRecords
+        };
+        await saveToCache(payload);
+        applyDataset(payload, false);
+        showToast(`Berjaya memuat naik ${extracted.length.toLocaleString()} rekod daripada ${file.name}!`);
+      };
+      reader.readAsText(file, 'ISO-8859-1');
+    }
+
+    function extractSqlTuples(sql, table) {
+      const results = [];
+      const regex = new RegExp(`INSERT INTO \`${table}\` VALUES\\s*`, 'gi');
+      let match;
+      while ((match = regex.exec(sql)) !== null) {
+        let i = match.index + match[0].length;
+        while (i < sql.length) {
+          while (i < sql.length && /[\s,]/.test(sql[i])) i++;
+          if (sql[i] === ';' || i >= sql.length) break;
+          if (sql[i] !== '(') { i++; continue; }
+          i++;
+          const row = [];
+          let cur = '';
+          let inStr = false;
+          while (i < sql.length) {
+            const ch = sql[i];
+            if (inStr) {
+              if (ch === '\\' && i + 1 < sql.length) { cur += sql[i + 1]; i += 2; continue; }
+              if (ch === "'" && sql[i + 1] === "'") { cur += "'"; i += 2; continue; }
+              if (ch === "'") inStr = false;
+              else cur += ch;
+            } else {
+              if (ch === "'") inStr = true;
+              else if (ch === ',') { row.push(cur.trim() === 'NULL' ? '' : cur.trim()); cur = ''; }
+              else if (ch === ')') { row.push(cur.trim() === 'NULL' ? '' : cur.trim()); results.push(row); i++; break; }
+              else cur += ch;
+            }
+            i++;
+          }
+        }
+      }
+      return results;
+    }
+
+    function exportToCSV() {
+      if (filteredRecords.length === 0) {
+        showToast('Tiada rekod untuk dieksport.');
+        return;
+      }
+      const headers = ['Kod 1PP', 'Kategori', 'Perihal / Nama Item', 'Kelas 1', 'Kelas 2', 'Kelas 3'];
+      const lines = [headers.join(',')];
+      for (const r of filteredRecords) {
+        const meta = getCategoryMeta(r.cat);
+        const row = [r.code, meta.label, r.desc, r.c1 || '', r.c2 || '', r.c3 || '']
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`);
+        lines.push(row.join(','));
+      }
+      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ARAS_Senarai_Kod_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Dieksport ${filteredRecords.length.toLocaleString()} rekod ke CSV.`);
+    }
+
+    // =========================================================================
+    // 9. UTILITIES (MODALS, CLIPBOARD, TOAST, ESCAPE)
+    // =========================================================================
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function openStatusModal() {
+      openModal('statusModal');
+    }
+
+    function copyCode(codeText) {
+      const ta = document.createElement('textarea');
+      ta.value = codeText;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(`Kod "${codeText}" berjaya disalin!`);
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Start Application
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initAppData();
+    });
+  </script>
+</body>
+</html>
