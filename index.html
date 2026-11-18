@@ -320,15 +320,19 @@
       return [...new Set(urls)];
     }
 
-    // Pengesanan pintar untuk semua format objek/tatasusunan data_terkini.json:
-    // Mengasingkan Kod, Kumpulan (Aset Alih/Stok), Kategori, Sub Kategori, dan Nama Barang sebenar
+    // Pemetaan tepat mengikut susunan sebenar rekod data_terkini.json:
+    // vals[0] = Kod (001002001)
+    // vals[1] = Kumpulan (ASET_ALIH / STOK)
+    // vals[2] = Kategori (PERALATAN DAN KELENGKAPAN ICT)
+    // vals[3] = Sub Kategori (KOMPUTER)
+    // vals[4] = Nama / Jenis Aset Sebenar (KOMPUTER MEJA (DESKTOP) / KOMPUTER RIBA)
+    // vals[5] = Huraian Panjang (DESCRIPTION: ...)
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
 
       const kod = String(obj.kod || obj.code || vals[0] || '').trim();
 
-      // Cari jenis kumpulan (ASET_ALIH / STOK) di mana-mana lajur awal
       let jenisRaw = obj.jenis || obj.type || obj.kumpulan || '';
       if (!jenisRaw) {
         for (let i = 1; i <= 3 && i < vals.length; i++) {
@@ -340,41 +344,34 @@
       }
       const jenis = normalizeJenis(jenisRaw, kod);
 
-      // Kumpulkan lajur teks yang bukan kod, bukan jenis kumpulan, bukan URL, dan bukan deskripsi panjang
-      const textCols = [];
+      // Kumpulkan semua lajur teks pendek/sederhana (bukan kod, bukan jenis, bukan URL, bukan blok DESCRIPTION)
+      const labelCols = [];
       for (let i = 1; i < vals.length; i++) {
         const s = cleanText(vals[i]);
         if (!s || s === kod || /^\d{6,}$/.test(s) || isJenisToken(s)) continue;
         if (s.startsWith('http') || /\.(jpg|jpeg|png|webp|gif)$/i.test(s)) continue;
-        if (s.length > 140 || /DE(?:SC|CS)RIPTION\s*:/i.test(s)) continue;
-        if (!textCols.includes(s)) textCols.push(s);
+        if (/DE(?:SC|CS)RIPTION\s*:/i.test(s)) continue;
+        if (!labelCols.includes(s)) labelCols.push(s);
       }
 
-      // Dalam susunan MOF: jika ada 3 teks (Kategori, SubKategori, NamaBarang), nama barang ialah yang terakhir;
-      // jika ada 2 teks (cth: vals[1]=NamaBarang, vals[2]=Kategori ATAU vals[2]=Kategori, vals[3]=NamaBarang):
       let kategori = cleanText(obj.kategori || obj.category) || '-';
       let subKategori = cleanText(obj.sub_kategori || obj.subkategori) || '';
       let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || obj.perihal) || '';
 
       if (!nama) {
-        if (textCols.length >= 3) {
-          kategori = textCols[0];
-          subKategori = textCols[1];
-          nama = textCols[2];
-        } else if (textCols.length === 2) {
-          // Dalam rekod stok/aset 4-medan (kod, nama, ASET_ALIH, KATEGORI), vals[1] ialah nama barang sebenar
-          if (!isJenisToken(vals[1]) && cleanText(vals[1]) === textCols[0]) {
-            nama = textCols[0];
-            kategori = textCols[1];
-          } else {
-            kategori = textCols[0];
-            nama = textCols[1];
-          }
-        } else if (textCols.length === 1) {
-          nama = textCols[0];
+        if (labelCols.length >= 3) {
+          kategori = labelCols[0];
+          subKategori = labelCols[1];
+          nama = labelCols[2];
+        } else if (labelCols.length === 2) {
+          kategori = labelCols[0];
+          nama = labelCols[1];
+        } else if (labelCols.length === 1) {
+          nama = labelCols[0];
         }
       }
 
+      // Jika teks dalam nama masih terlalu panjang (bercampur huraian), ambil baris/ayat pertama sahaja untuk tajuk kad
       let keterangan = String(obj.keterangan || obj.description || obj.maklumat || '').trim();
       if (!keterangan) {
         for (let i = 2; i < vals.length; i++) {
@@ -667,7 +664,6 @@
       }
     }
 
-    // Kad Katalog 100% Bersih Gaya Portal Rasmi MOF: Gambar + Kod + Nama Barang sahaja
     function renderCatalogGridView(list, isFuzzy) {
       const fragment = document.createDocumentFragment();
       list.forEach((item, idx) => {
