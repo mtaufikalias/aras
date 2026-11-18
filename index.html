@@ -11,8 +11,8 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
     .mono { font-family: 'JetBrains Mono', monospace; }
-    .card-hover { transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.08); }
+    .catalog-card { transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+    .catalog-card:hover { transform: translateY(-2px); border-color: #2563eb; box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.16); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -46,8 +46,9 @@
     </div>
   </header>
 
-  <!-- Search & Filters -->
+  <!-- Main Content -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
+    <!-- Search & Category Filter Pills -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sm:p-6 mb-6">
       <div class="relative">
         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -69,7 +70,7 @@
         </button>
       </div>
 
-      <!-- Category Filter Pills -->
+      <!-- Dynamic Filter Pills -->
       <div class="flex flex-wrap items-center gap-2 mt-4" id="filterBar">
         <button data-filter="Semua" class="filter-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm transition">
           Semua (<span id="countSemua">0</span>)
@@ -100,7 +101,7 @@
       </div>
 
       <div class="inline-flex items-center rounded-lg bg-white border border-slate-200 p-1 shadow-2xs">
-        <button id="viewGridBtn" type="button" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white transition">Kolum</button>
+        <button id="viewGridBtn" type="button" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white transition">Katalog</button>
         <button id="viewListBtn" type="button" class="px-2.5 py-1 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition">Senarai</button>
       </div>
     </div>
@@ -125,7 +126,7 @@
     <!-- Load More Button -->
     <div id="loadMoreWrap" class="hidden mt-6 text-center">
       <button id="loadMoreBtn" type="button" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm border border-slate-300 shadow-2xs transition">
-        <span id="loadMoreText">Papar 15 Rekod Seterusnya</span>
+        <span id="loadMoreText">Papar 16 Rekod Seterusnya</span>
         <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
         </svg>
@@ -144,7 +145,7 @@
     </div>
   </main>
 
-  <!-- Modal Paparan Penuh -->
+  <!-- Modal Paparan Penuh (Muncul bila kad diklik) -->
   <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden">
       <div class="bg-blue-600 px-6 py-4 flex items-center justify-between text-white">
@@ -160,8 +161,16 @@
       </div>
 
       <div class="p-6 max-h-[78vh] overflow-y-auto space-y-5">
-        <div id="modalImageWrap" class="hidden bg-slate-100 rounded-xl border border-slate-200 p-4 flex items-center justify-center">
-          <img id="modalImage" src="" alt="Gambar Aset" class="max-h-52 w-auto object-contain rounded-lg shadow-xs" />
+        <!-- Gambar Besar / No Image Placeholder -->
+        <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center justify-center min-h-[160px]">
+          <img id="modalImage" src="" alt="Gambar Aset" class="hidden max-h-52 w-auto object-contain rounded-lg" />
+          <div id="modalNoImage" class="flex flex-col items-center justify-center text-slate-400 py-4">
+            <svg class="w-10 h-10 mb-1.5 opacity-60" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-[10px] font-bold tracking-wider uppercase">No Image Available</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-[185px_1fr] gap-y-3.5 gap-x-4 text-xs sm:text-sm">
@@ -182,13 +191,18 @@
         </div>
       </div>
 
-      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
-        <button id="modalCopyBtn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
-          Salin Kod
-        </button>
-        <button id="closeModalBottom" type="button" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
-          Tutup
-        </button>
+      <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+        <a id="modalMofLink" href="https://knowledgebase.treasury.gov.my/kb/asset.cfm?subsystem_type=asset" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold transition">
+          Portal Rasmi MOF &nearr;
+        </a>
+        <div class="flex items-center gap-2">
+          <button id="modalCopyBtn" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
+            Salin Kod
+          </button>
+          <button id="closeModalBottom" type="button" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -204,10 +218,11 @@
   </div>
 
   <script type="module">
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 16;
 
     let allRecords = [];
-    let fullMatchedRecords = [];
+    let allQueryMatches = [];
+    let filteredDisplayRecords = [];
     let visibleCount = PAGE_SIZE;
     let currentIsFuzzy = false;
     let semanticVectors = [];
@@ -243,6 +258,16 @@
       'drill': ['gerudi'],
       'air purifier': ['penapis udara', 'pembersih udara']
     };
+
+    const NO_IMAGE_SVG = `
+      <div class="flex flex-col items-center justify-center text-slate-400 select-none">
+        <svg class="w-9 h-9 mb-1 opacity-65" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span class="text-[9px] font-bold tracking-wider uppercase leading-tight text-center">No Image<br>Available</span>
+      </div>
+    `;
 
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -291,14 +316,6 @@
       return [...new Set(urls)];
     }
 
-    // Pemetaan tepat mengikut susunan sebenar data_terkini.json:
-    // vals[0] = Kod (015002001)
-    // vals[1] = Kumpulan (ASET_ALIH -> Aset Alih)
-    // vals[2] = Kategori (PERABOT)
-    // vals[3] = Ulangan kod (015002001) -> diabaikan
-    // vals[4] = Sub Kategori (KERUSI)
-    // vals[5] = Jenis / Nama Barang sebenar (KERUSI PENGURUSAN TERTINGGI, KERUSI KOMPUTER, dll.)
-    // vals[6]+ = Keterangan panjang & Gambar
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
@@ -343,7 +360,7 @@
         document.getElementById('metaTotal').textContent = allRecords.length.toLocaleString('ms-MY');
         dbReadyNote.textContent = `Pangkalan data sedia (${allRecords.length.toLocaleString('ms-MY')} rekod rasmi dimuatkan).`;
 
-        updateCounts();
+        updateCounts(allRecords);
 
         fetch('vectors.json')
           .then(r => r.ok ? r.json() : null)
@@ -356,24 +373,24 @@
       }
     }
 
-    function updateCounts() {
+    function updateCounts(sourceList) {
       let alih = 0, takAlih = 0, takKetara = 0, stok = 0;
-      for (const r of allRecords) {
+      for (const r of sourceList) {
         if (r.jenis === 'Aset Alih') alih++;
         else if (r.jenis === 'Aset Tak Alih') takAlih++;
         else if (r.jenis === 'Aset Tak Ketara') takKetara++;
         else if (r.jenis === 'Stok') stok++;
       }
-      document.getElementById('countSemua').textContent = allRecords.length.toLocaleString('ms-MY');
+      document.getElementById('countSemua').textContent = sourceList.length.toLocaleString('ms-MY');
       document.getElementById('countAlih').textContent = alih.toLocaleString('ms-MY');
       document.getElementById('countTakAlih').textContent = takAlih.toLocaleString('ms-MY');
       document.getElementById('countTakKetara').textContent = takKetara.toLocaleString('ms-MY');
       document.getElementById('countStok').textContent = stok.toLocaleString('ms-MY');
 
-      document.getElementById('btnAlih').classList.toggle('hidden', alih === 0);
-      document.getElementById('btnTakAlih').classList.toggle('hidden', takAlih === 0);
-      document.getElementById('btnTakKetara').classList.toggle('hidden', takKetara === 0);
-      document.getElementById('btnStok').classList.toggle('hidden', stok === 0);
+      document.getElementById('btnAlih').classList.toggle('hidden', alih === 0 && currentFilter !== 'Aset Alih');
+      document.getElementById('btnTakAlih').classList.toggle('hidden', takAlih === 0 && currentFilter !== 'Aset Tak Alih');
+      document.getElementById('btnTakKetara').classList.toggle('hidden', takKetara === 0 && currentFilter !== 'Aset Tak Ketara');
+      document.getElementById('btnStok').classList.toggle('hidden', stok === 0 && currentFilter !== 'Stok');
     }
 
     function formatDescriptionHtml(rawDesc) {
@@ -394,11 +411,6 @@
       return `<p>${escapeHtml(text)}</p>`;
     }
 
-    function filterByJenis(list) {
-      if (currentFilter === 'Semua') return list;
-      return list.filter(r => r.jenis === currentFilter);
-    }
-
     function cosineSimilarity(vecA, vecB) {
       let dot = 0;
       const len = Math.min(vecA.length, vecB.length);
@@ -406,16 +418,47 @@
       return dot;
     }
 
-    function setMatchedResults(matches, isFuzzy, rawQuery) {
-      fullMatchedRecords = matches || [];
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function rankMatches(matches, q) {
+      const wordRegex = new RegExp(`\\b${escapeRegExp(q)}\\b`, 'i');
+      const startWordRegex = new RegExp(`\\b${escapeRegExp(q)}`, 'i');
+
+      function scoreRecord(r) {
+        const namaLower = r.nama.toLowerCase();
+        const subLower = r.subKategori.toLowerCase();
+        if (namaLower === q || subLower === q) return 100;
+        if (wordRegex.test(namaLower)) return 90;
+        if (wordRegex.test(subLower)) return 80;
+        if (namaLower.startsWith(q)) return 70;
+        if (startWordRegex.test(namaLower)) return 60;
+        if (r.kod.toLowerCase().startsWith(q)) return 55;
+        if (startWordRegex.test(subLower) || startWordRegex.test(r.kategori.toLowerCase())) return 40;
+        return 10;
+      }
+
+      return matches
+        .map(r => ({ r, s: scoreRecord(r) }))
+        .sort((a, b) => b.s - a.s)
+        .map(x => x.r);
+    }
+
+    function applyFilterAndRender(rawQuery = searchInput.value.trim()) {
+      updateCounts(allQueryMatches);
+
+      filteredDisplayRecords = currentFilter === 'Semua'
+        ? allQueryMatches
+        : allQueryMatches.filter(r => r.jenis === currentFilter);
+
       visibleCount = PAGE_SIZE;
-      currentIsFuzzy = isFuzzy;
       renderCurrentSlice(rawQuery);
     }
 
     function renderCurrentSlice(rawQuery = searchInput.value.trim()) {
-      const total = fullMatchedRecords.length;
-      const slice = fullMatchedRecords.slice(0, visibleCount);
+      const total = filteredDisplayRecords.length;
+      const slice = filteredDisplayRecords.slice(0, visibleCount);
 
       renderRecords(slice, currentIsFuzzy);
 
@@ -428,7 +471,7 @@
       if (currentIsFuzzy) {
         resultSummary.innerHTML = `Tiada padanan tepat untuk "<strong>${escapeHtml(rawQuery)}</strong>" — memaparkan <strong>${slice.length}</strong> daripada <strong>${total.toLocaleString('ms-MY')}</strong> cadangan <strong>Padanan Hampir</strong>`;
       } else {
-        resultSummary.innerHTML = `Menunjukkan <strong>${slice.length}</strong> daripada <strong>${total.toLocaleString('ms-MY')}</strong> rekod ditemui`;
+        resultSummary.innerHTML = `Menunjukkan <strong>${slice.length}</strong> daripada <strong>${total.toLocaleString('ms-MY')}</strong> rekod ditemui (Klik kad untuk maklumat penuh)`;
       }
 
       const remaining = total - slice.length;
@@ -447,6 +490,9 @@
       aiStatusBadge.classList.add('hidden');
 
       if (!rawQuery) {
+        allQueryMatches = [];
+        filteredDisplayRecords = [];
+        updateCounts(allRecords);
         welcomeState.classList.remove('hidden');
         statusBar.classList.add('hidden');
         resultsContainer.classList.add('hidden');
@@ -459,9 +505,8 @@
       statusBar.classList.remove('hidden');
 
       const q = rawQuery.toLowerCase();
-      const basePool = filterByJenis(allRecords);
 
-      let exactMatches = basePool.filter(r =>
+      let exactMatches = allRecords.filter(r =>
         r.nama.toLowerCase().includes(q) ||
         r.kod.toLowerCase().includes(q) ||
         r.kategori.toLowerCase().includes(q) ||
@@ -470,7 +515,9 @@
       );
 
       if (exactMatches.length > 0) {
-        setMatchedResults(exactMatches, false, rawQuery);
+        allQueryMatches = rankMatches(exactMatches, q);
+        currentIsFuzzy = false;
+        applyFilterAndRender(rawQuery);
         return;
       }
 
@@ -480,12 +527,14 @@
       }
 
       if (synonymTerms.length > 0) {
-        const synMatches = basePool.filter(r => {
+        const synMatches = allRecords.filter(r => {
           const hay = `${r.nama} ${r.kategori} ${r.subKategori} ${r.keterangan}`.toLowerCase();
           return synonymTerms.some(term => hay.includes(term));
         });
         if (synMatches.length > 0) {
-          setMatchedResults(synMatches, true, rawQuery);
+          allQueryMatches = synMatches;
+          currentIsFuzzy = true;
+          applyFilterAndRender(rawQuery);
           return;
         }
       }
@@ -515,11 +564,13 @@
           aiStatusBadge.classList.add('hidden');
 
           if (topCategories.length > 0) {
-            const aiMatches = basePool.filter(r =>
+            const aiMatches = allRecords.filter(r =>
               topCategories.some(tc => tc.includes(r.subKategori.toLowerCase()) || tc.includes(r.kategori.toLowerCase()))
-            ).slice(0, 30);
+            ).slice(0, 32);
             if (aiMatches.length > 0) {
-              setMatchedResults(aiMatches, true, rawQuery);
+              allQueryMatches = aiMatches;
+              currentIsFuzzy = true;
+              applyFilterAndRender(rawQuery);
               return;
             }
           }
@@ -530,18 +581,22 @@
 
       const tokens = q.split(/\s+/).filter(t => t.length >= 3);
       if (tokens.length > 0) {
-        const tokenMatches = basePool.filter(r => {
+        const tokenMatches = allRecords.filter(r => {
           const hay = `${r.nama} ${r.kategori} ${r.subKategori} ${r.keterangan}`.toLowerCase();
           return tokens.some(t => hay.includes(t));
-        }).slice(0, 30);
+        }).slice(0, 32);
 
         if (tokenMatches.length > 0) {
-          setMatchedResults(tokenMatches, true, rawQuery);
+          allQueryMatches = tokenMatches;
+          currentIsFuzzy = true;
+          applyFilterAndRender(rawQuery);
           return;
         }
       }
 
-      setMatchedResults([], false, rawQuery);
+      allQueryMatches = [];
+      currentIsFuzzy = false;
+      applyFilterAndRender(rawQuery);
     }
 
     function getBadgeStyle(jenis) {
@@ -567,63 +622,45 @@
         resultsContainer.className = 'bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden';
         renderListView(list, isFuzzy);
       } else {
-        resultsContainer.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
-        renderGridView(list, isFuzzy);
+        resultsContainer.className = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4';
+        renderCatalogGridView(list, isFuzzy);
       }
     }
 
-    function renderGridView(list, isFuzzy) {
+    // Kad Katalog Bersih Gaya MOF: Gambar / No Image + Kod + Nama Sahaja
+    function renderCatalogGridView(list, isFuzzy) {
       const fragment = document.createDocumentFragment();
       list.forEach((item, idx) => {
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between card-hover';
+        card.setAttribute('data-idx', idx);
+        card.className = 'open-modal-card catalog-card cursor-pointer bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between text-left';
 
-        const isStok = item.jenis === 'Stok';
         const primaryImg = item.images[0] || '';
 
         card.innerHTML = `
           <div>
-            <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                ${isFuzzy ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">Padanan Hampir</span>` : `<span class="text-[11px] font-semibold text-slate-400">Rujukan 1PP</span>`}
-              </div>
-              <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shrink-0 ${getBadgeStyle(item.jenis)}">${escapeHtml(item.jenis)}</span>
+            <div class="relative w-full h-36 mb-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden p-2">
+              ${primaryImg ? `
+                <img src="${escapeAttr(primaryImg)}" alt="${escapeAttr(item.nama)}" loading="lazy"
+                  onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                  class="max-h-32 w-auto object-contain" />
+                <div class="hidden">${NO_IMAGE_SVG}</div>
+              ` : NO_IMAGE_SVG}
+
+              <span class="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getBadgeStyle(item.jenis)}">
+                ${escapeHtml(item.jenis)}
+              </span>
+              ${isFuzzy ? `<span class="absolute top-2 left-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Hampir</span>` : ''}
             </div>
 
-            ${primaryImg ? `
-              <div class="mb-3 bg-slate-50 rounded-lg border border-slate-100 p-2 flex items-center justify-center h-28 overflow-hidden">
-                <img src="${escapeAttr(primaryImg)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'" class="max-h-24 w-auto object-contain" />
-              </div>
-            ` : ''}
-
-            <div class="grid grid-cols-[110px_1fr] gap-y-2.5 gap-x-2 text-xs mb-4">
-              <div class="font-bold text-slate-800">${isStok ? 'Kod Stok:' : 'Kod Aset:'}</div>
-              <div><span class="mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">${escapeHtml(item.kod)}</span></div>
-
-              <div class="font-bold text-slate-800">Kategori:</div>
-              <div class="text-slate-700 font-medium uppercase leading-snug" title="${escapeAttr(item.kategori)}">${escapeHtml(item.kategori)}</div>
-
-              ${item.subKategori ? `
-                <div class="font-bold text-slate-800">Sub Kategori:</div>
-                <div class="text-slate-700 font-medium uppercase leading-snug">${escapeHtml(item.subKategori)}</div>
-              ` : ''}
-
-              <div class="font-bold text-slate-800">${isStok ? 'Perihal Stok:' : 'Jenis Aset:'}</div>
-              <div class="text-slate-900 font-bold uppercase leading-snug">${escapeHtml(item.nama)}</div>
-
-              ${item.keterangan ? `
-                <div class="font-bold text-slate-800">${isStok ? 'Maklumat Stok:' : 'Maklumat Aset:'}</div>
-                <div class="text-slate-600 leading-relaxed line-clamp-2">${escapeHtml(item.keterangan)}</div>
-              ` : ''}
-            </div>
+            <div class="mono text-xs font-bold text-slate-600 tracking-tight mb-0.5">${escapeHtml(item.kod)}</div>
+            <div class="text-xs sm:text-sm font-extrabold text-slate-900 uppercase leading-snug line-clamp-2">${escapeHtml(item.nama)}</div>
           </div>
 
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <button type="button" data-idx="${idx}" class="open-modal-btn inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition">
-              Lihat Penuh
-            </button>
-            <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs font-semibold transition">
-              Salin Kod
+          <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span class="text-blue-600 font-semibold">Lihat Butiran &rarr;</span>
+            <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-semibold transition">
+              Salin
             </button>
           </div>
         `;
@@ -634,25 +671,19 @@
 
     function renderListView(list, isFuzzy) {
       const rowsHtml = list.map((item, idx) => `
-        <tr class="hover:bg-blue-50/40 transition border-b border-slate-100 last:border-none">
-          <td class="py-3.5 px-4 align-top whitespace-nowrap">
+        <tr data-idx="${idx}" class="open-modal-card cursor-pointer hover:bg-blue-50/40 transition border-b border-slate-100 last:border-none">
+          <td class="py-3.5 px-4 align-middle whitespace-nowrap">
             <span class="mono text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded border border-slate-200/80">${escapeHtml(item.kod)}</span>
           </td>
-          <td class="py-3.5 px-4 align-top">
+          <td class="py-3.5 px-4 align-middle">
             <div class="font-bold text-xs sm:text-sm text-slate-900 uppercase">${escapeHtml(item.nama)}</div>
-            <div class="text-[11px] text-slate-500 uppercase mt-0.5">
-              <span class="font-semibold text-slate-700">${escapeHtml(item.kategori)}</span>${item.subKategori ? ` &rsaquo; ${escapeHtml(item.subKategori)}` : ''}
-            </div>
             ${isFuzzy ? `<span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Padanan Hampir</span>` : ''}
           </td>
-          <td class="py-3.5 px-4 align-top whitespace-nowrap">
+          <td class="py-3.5 px-4 align-middle whitespace-nowrap">
             <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getBadgeStyle(item.jenis)}">${escapeHtml(item.jenis)}</span>
           </td>
-          <td class="py-3.5 px-4 align-top whitespace-nowrap text-right">
-            <div class="inline-flex items-center gap-2">
-              <button type="button" data-idx="${idx}" class="open-modal-btn px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition">Lihat Penuh</button>
-              <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs font-semibold transition">Salin</button>
-            </div>
+          <td class="py-3.5 px-4 align-middle whitespace-nowrap text-right">
+            <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-blue-600 text-white text-xs font-semibold transition">Salin Kod</button>
           </td>
         </tr>
       `).join('');
@@ -663,7 +694,7 @@
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th class="py-3 px-4">Kod</th>
-                <th class="py-3 px-4">Jenis / Kategori</th>
+                <th class="py-3 px-4">Jenis / Keterangan Barang</th>
                 <th class="py-3 px-4">Kumpulan</th>
                 <th class="py-3 px-4 text-right">Tindakan</th>
               </tr>
@@ -701,17 +732,19 @@
       document.getElementById('modalLabelDesc').textContent = isStok ? 'Maklumat Stok:' : 'Maklumat Aset:';
       document.getElementById('modalDesc').innerHTML = formatDescriptionHtml(item.keterangan);
 
-      const imgWrap = document.getElementById('modalImageWrap');
       const imgEl = document.getElementById('modalImage');
+      const noImgEl = document.getElementById('modalNoImage');
       let tryIdx = 0;
 
       function tryNextImage() {
         if (tryIdx >= item.images.length) {
-          imgWrap.classList.add('hidden');
+          imgEl.classList.add('hidden');
+          noImgEl.classList.remove('hidden');
           imgEl.src = '';
           return;
         }
-        imgWrap.classList.remove('hidden');
+        imgEl.classList.remove('hidden');
+        noImgEl.classList.add('hidden');
         imgEl.onerror = () => {
           tryIdx++;
           tryNextImage();
@@ -763,14 +796,15 @@
     resultsContainer.addEventListener('click', e => {
       const copyBtn = e.target.closest('.copy-btn');
       if (copyBtn) {
+        e.stopPropagation();
         const kod = copyBtn.getAttribute('data-kod');
         navigator.clipboard.writeText(kod);
         showToast(`Kod ${kod} berjaya disalin!`);
         return;
       }
-      const openBtn = e.target.closest('.open-modal-btn');
-      if (openBtn) {
-        openDetailModal(fullMatchedRecords[Number(openBtn.getAttribute('data-idx'))]);
+      const card = e.target.closest('.open-modal-card');
+      if (card) {
+        openDetailModal(filteredDisplayRecords[Number(card.getAttribute('data-idx'))]);
       }
     });
 
@@ -795,7 +829,7 @@
       btn.classList.remove('bg-slate-100', 'text-slate-600');
       btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
       currentFilter = btn.getAttribute('data-filter');
-      performSearch();
+      if (searchInput.value.trim()) applyFilterAndRender();
     });
 
     searchInput.addEventListener('input', () => {
