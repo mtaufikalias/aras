@@ -69,7 +69,7 @@
         </button>
       </div>
 
-      <!-- Category Filter Pills (Auto-hide 0 counts) -->
+      <!-- Category Filter Pills -->
       <div class="flex flex-wrap items-center gap-2 mt-4" id="filterBar">
         <button data-filter="Semua" class="filter-btn active px-3.5 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white shadow-sm transition">
           Semua (<span id="countSemua">0</span>)
@@ -144,7 +144,7 @@
     </div>
   </main>
 
-  <!-- Modal Paparan Penuh Gaya Knowledgebase MOF -->
+  <!-- Modal Paparan Penuh -->
   <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden">
       <div class="bg-blue-600 px-6 py-4 flex items-center justify-between text-white">
@@ -171,7 +171,7 @@
           <div class="font-bold text-slate-800">Kategori:</div>
           <div id="modalKategori" class="text-slate-700 font-medium uppercase"></div>
 
-          <div class="font-bold text-slate-800">Sub Kategori:</div>
+          <div id="modalSubWrapLabel" class="font-bold text-slate-800">Sub Kategori:</div>
           <div id="modalSubKategori" class="text-slate-700 font-medium uppercase"></div>
 
           <div id="modalLabelNama" class="font-bold text-slate-800">Jenis / Keterangan Aset:</div>
@@ -271,7 +271,7 @@
       return String(kod || '').length > 10 ? 'Stok' : 'Aset Alih';
     }
 
-    function extractAllImages(raw, kod, jenis) {
+    function extractAllImages(raw) {
       const urls = [];
       const values = Array.isArray(raw) ? raw : Object.values(raw || {});
       for (const v of values) {
@@ -288,45 +288,28 @@
           }
         }
       }
-      if (kod) {
-        if (jenis === 'Stok') {
-          urls.push(`https://knowledgebase.treasury.gov.my/kb/images/stock/${kod}_1.jpg`);
-          urls.push(`https://knowledgebase.treasury.gov.my/kb/images/stock/${kod}.jpg`);
-        } else {
-          urls.push(`https://knowledgebase.treasury.gov.my/kb/images/asset/${kod}_1.jpg`);
-          urls.push(`https://knowledgebase.treasury.gov.my/kb/images/asset/${kod}.jpg`);
-        }
-      }
       return [...new Set(urls)];
     }
 
-    // Auto-kesan setiap lajur tanpa bergantung pada nama kunci
+    // Pemetaan tepat mengikut susunan sebenar data_terkini.json:
+    // vals[0] = Kod (015002001)
+    // vals[1] = Jenis / Nama Barang (KERUSI PENGURUSAN TERTINGGI)
+    // vals[2] = Kumpulan (ASET_ALIH -> Aset Alih)
+    // vals[3] = Kategori (PERABOT)
+    // vals[4] = Sub Kategori (jika ada)
+    // vals[5] = Keterangan / Deskripsi (jika ada)
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
 
-      const kod = String(obj.kod || obj.code || obj.kod_aset || obj.kod_stok || vals[0] || '').trim();
-      const rawJenis = obj.jenis || obj.type || obj.kumpulan || vals[1];
-      const jenis = normalizeJenis(rawJenis, kod);
-      const kategori = cleanText(obj.kategori || obj.category || vals[2]) || '-';
+      const kod = String(obj.kod || obj.code || vals[0] || '').trim();
+      const nama = cleanText(obj.nama || obj.name || vals[1]) || '-';
+      const jenis = normalizeJenis(obj.jenis || obj.type || vals[2], kod);
+      const kategori = cleanText(obj.kategori || obj.category || vals[3]) || '-';
+      const subKategori = cleanText(obj.sub_kategori || obj.subkategori || vals[4]) || '';
+      const keterangan = String(obj.keterangan || obj.description || obj.maklumat || vals[5] || '').trim();
+      const images = extractAllImages(raw);
 
-      const col3 = String(vals[3] || '').trim();
-      const isRepeatKod = col3 === kod || /^\d{6,}$/.test(col3);
-      const subKategori = cleanText(obj.sub_kategori || obj.subkategori || obj.subcategory || (isRepeatKod ? '-' : col3)) || '-';
-      const nama = cleanText(obj.nama || obj.name || obj.jenis_aset || obj.perihal || vals[4] || (isRepeatKod ? '' : col3)) || '-';
-
-      // Auto-kesan deskripsi: cari kunci rasmi atau teks terpanjang yang bukan URL
-      let keterangan = String(obj.keterangan || obj.maklumat || obj.description || obj.desc || obj.huraian || '').trim();
-      if (!keterangan) {
-        for (let i = 4; i < vals.length; i++) {
-          const s = String(vals[i] || '').trim();
-          if (s && s !== nama && s !== kategori && s !== subKategori && !s.startsWith('http') && !/\.(jpg|jpeg|png|webp)$/i.test(s)) {
-            if (s.length > keterangan.length) keterangan = s;
-          }
-        }
-      }
-
-      const images = extractAllImages(raw, kod, jenis);
       return { kod, nama, jenis, kategori, subKategori, keterangan, images };
     }
 
@@ -577,8 +560,6 @@
         card.className = 'bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between card-hover';
 
         const isStok = item.jenis === 'Stok';
-        const desc = item.keterangan || 'Tiada huraian lanjut.';
-        const shortDesc = desc.length > 95 ? desc.slice(0, 95) + '...' : desc;
         const primaryImg = item.images[0] || '';
 
         card.innerHTML = `
@@ -596,21 +577,25 @@
               </div>
             ` : ''}
 
-            <div class="grid grid-cols-[112px_1fr] gap-y-2 gap-x-2 text-xs mb-4">
+            <div class="grid grid-cols-[110px_1fr] gap-y-2.5 gap-x-2 text-xs mb-4">
               <div class="font-bold text-slate-800">${isStok ? 'Kod Stok:' : 'Kod Aset:'}</div>
               <div><span class="mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200/80">${escapeHtml(item.kod)}</span></div>
 
               <div class="font-bold text-slate-800">Kategori:</div>
-              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-1" title="${escapeAttr(item.kategori)}">${escapeHtml(item.kategori)}</div>
+              <div class="text-slate-700 font-medium uppercase leading-snug" title="${escapeAttr(item.kategori)}">${escapeHtml(item.kategori)}</div>
 
-              <div class="font-bold text-slate-800">Sub Kategori:</div>
-              <div class="text-slate-700 font-medium uppercase leading-snug line-clamp-1" title="${escapeAttr(item.subKategori)}">${escapeHtml(item.subKategori)}</div>
+              ${item.subKategori ? `
+                <div class="font-bold text-slate-800">Sub Kategori:</div>
+                <div class="text-slate-700 font-medium uppercase leading-snug">${escapeHtml(item.subKategori)}</div>
+              ` : ''}
 
               <div class="font-bold text-slate-800">${isStok ? 'Perihal Stok:' : 'Jenis Aset:'}</div>
               <div class="text-slate-900 font-bold uppercase leading-snug">${escapeHtml(item.nama)}</div>
 
-              <div class="font-bold text-slate-800">${isStok ? 'Maklumat Stok:' : 'Maklumat Aset:'}</div>
-              <div class="text-slate-600 leading-relaxed line-clamp-2">${escapeHtml(shortDesc)}</div>
+              ${item.keterangan ? `
+                <div class="font-bold text-slate-800">${isStok ? 'Maklumat Stok:' : 'Maklumat Aset:'}</div>
+                <div class="text-slate-600 leading-relaxed line-clamp-2">${escapeHtml(item.keterangan)}</div>
+              ` : ''}
             </div>
           </div>
 
@@ -637,12 +622,9 @@
           <td class="py-3.5 px-4 align-top">
             <div class="font-bold text-xs sm:text-sm text-slate-900 uppercase">${escapeHtml(item.nama)}</div>
             <div class="text-[11px] text-slate-500 uppercase mt-0.5">
-              <span class="font-semibold text-slate-700">${escapeHtml(item.kategori)}</span> &rsaquo; ${escapeHtml(item.subKategori)}
+              <span class="font-semibold text-slate-700">${escapeHtml(item.kategori)}</span>${item.subKategori ? ` &rsaquo; ${escapeHtml(item.subKategori)}` : ''}
             </div>
             ${isFuzzy ? `<span class="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Padanan Hampir</span>` : ''}
-          </td>
-          <td class="py-3.5 px-4 align-top hidden md:table-cell text-xs text-slate-600 max-w-md">
-            <p class="line-clamp-2">${escapeHtml(item.keterangan || 'Tiada huraian lanjut.')}</p>
           </td>
           <td class="py-3.5 px-4 align-top whitespace-nowrap">
             <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${getBadgeStyle(item.jenis)}">${escapeHtml(item.jenis)}</span>
@@ -663,7 +645,6 @@
               <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th class="py-3 px-4">Kod</th>
                 <th class="py-3 px-4">Jenis / Kategori</th>
-                <th class="py-3 px-4 hidden md:table-cell">Maklumat</th>
                 <th class="py-3 px-4">Kumpulan</th>
                 <th class="py-3 px-4 text-right">Tindakan</th>
               </tr>
@@ -684,7 +665,18 @@
       document.getElementById('modalLabelKod').textContent = isStok ? 'Kod Stok:' : 'Kod Aset:';
       document.getElementById('modalKod').textContent = item.kod;
       document.getElementById('modalKategori').textContent = item.kategori;
-      document.getElementById('modalSubKategori').textContent = item.subKategori;
+
+      const subLabel = document.getElementById('modalSubWrapLabel');
+      const subVal = document.getElementById('modalSubKategori');
+      if (item.subKategori) {
+        subLabel.classList.remove('hidden');
+        subVal.classList.remove('hidden');
+        subVal.textContent = item.subKategori;
+      } else {
+        subLabel.classList.add('hidden');
+        subVal.classList.add('hidden');
+      }
+
       document.getElementById('modalLabelNama').textContent = isStok ? 'Perihal / Keterangan Stok:' : 'Jenis / Keterangan Aset:';
       document.getElementById('modalNama').textContent = item.nama;
       document.getElementById('modalLabelDesc').textContent = isStok ? 'Maklumat Stok:' : 'Maklumat Aset:';
