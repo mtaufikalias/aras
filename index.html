@@ -12,7 +12,7 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
     .mono { font-family: 'JetBrains Mono', monospace; }
     .catalog-card { transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
-    .catalog-card:hover { transform: translateY(-2px); border-color: #2563eb; box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.16); }
+    .catalog-card:hover { transform: translateY(-2px); border-color: #2563eb; box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.15); }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -286,6 +286,11 @@
       return String(val || '').replace(/_/g, ' ').trim();
     }
 
+    function isJenisToken(val) {
+      const s = cleanText(val).toLowerCase();
+      return s === 'aset alih' || s === 'aset tak alih' || s === 'aset tak ketara' || s === 'stok';
+    }
+
     function normalizeJenis(rawJenis, kod) {
       const j = cleanText(rawJenis).toLowerCase();
       if (j.includes('stok') || j.includes('stock')) return 'Stok';
@@ -315,38 +320,73 @@
       return [...new Set(urls)];
     }
 
-    // Pemetaan tepat mengikut struktur sebenar rekod MOF:
-    // vals[0]=kod, vals[1]=jenis, vals[2]=kategori (PERABOT), vals[3]=subKategori (KERUSI), vals[4]=nama (KERUSI PENGURUSAN TERTINGGI), vals[5]=keterangan
+    // Pengesanan pintar untuk semua format objek/tatasusunan data_terkini.json:
+    // Mengasingkan Kod, Kumpulan (Aset Alih/Stok), Kategori, Sub Kategori, dan Nama Barang sebenar
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
 
       const kod = String(obj.kod || obj.code || vals[0] || '').trim();
-      const jenis = normalizeJenis(obj.jenis || obj.type || vals[1], kod);
-      const kategori = cleanText(obj.kategori || obj.category || vals[2]) || '-';
 
-      let subKategori = cleanText(obj.sub_kategori || obj.subkategori || vals[3]) || '';
-      if (subKategori === kod || /^\d{6,}$/.test(subKategori)) subKategori = '';
-
-      let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || vals[4]) || '';
-      if (!nama && subKategori) {
-        nama = subKategori;
-        subKategori = '';
+      // Cari jenis kumpulan (ASET_ALIH / STOK) di mana-mana lajur awal
+      let jenisRaw = obj.jenis || obj.type || obj.kumpulan || '';
+      if (!jenisRaw) {
+        for (let i = 1; i <= 3 && i < vals.length; i++) {
+          if (isJenisToken(vals[i])) {
+            jenisRaw = vals[i];
+            break;
+          }
+        }
       }
-      if (!nama) nama = kategori;
+      const jenis = normalizeJenis(jenisRaw, kod);
+
+      // Kumpulkan lajur teks yang bukan kod, bukan jenis kumpulan, bukan URL, dan bukan deskripsi panjang
+      const textCols = [];
+      for (let i = 1; i < vals.length; i++) {
+        const s = cleanText(vals[i]);
+        if (!s || s === kod || /^\d{6,}$/.test(s) || isJenisToken(s)) continue;
+        if (s.startsWith('http') || /\.(jpg|jpeg|png|webp|gif)$/i.test(s)) continue;
+        if (s.length > 140 || /DE(?:SC|CS)RIPTION\s*:/i.test(s)) continue;
+        if (!textCols.includes(s)) textCols.push(s);
+      }
+
+      // Dalam susunan MOF: jika ada 3 teks (Kategori, SubKategori, NamaBarang), nama barang ialah yang terakhir;
+      // jika ada 2 teks (cth: vals[1]=NamaBarang, vals[2]=Kategori ATAU vals[2]=Kategori, vals[3]=NamaBarang):
+      let kategori = cleanText(obj.kategori || obj.category) || '-';
+      let subKategori = cleanText(obj.sub_kategori || obj.subkategori) || '';
+      let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || obj.perihal) || '';
+
+      if (!nama) {
+        if (textCols.length >= 3) {
+          kategori = textCols[0];
+          subKategori = textCols[1];
+          nama = textCols[2];
+        } else if (textCols.length === 2) {
+          // Dalam rekod stok/aset 4-medan (kod, nama, ASET_ALIH, KATEGORI), vals[1] ialah nama barang sebenar
+          if (!isJenisToken(vals[1]) && cleanText(vals[1]) === textCols[0]) {
+            nama = textCols[0];
+            kategori = textCols[1];
+          } else {
+            kategori = textCols[0];
+            nama = textCols[1];
+          }
+        } else if (textCols.length === 1) {
+          nama = textCols[0];
+        }
+      }
 
       let keterangan = String(obj.keterangan || obj.description || obj.maklumat || '').trim();
       if (!keterangan) {
-        for (let i = 5; i < vals.length; i++) {
+        for (let i = 2; i < vals.length; i++) {
           const s = String(vals[i] || '').trim();
-          if (s && s !== nama && s !== subKategori && !s.startsWith('http') && !/\.(jpg|jpeg|png|webp)$/i.test(s)) {
+          if (s && s !== nama && s !== kategori && s !== subKategori && !s.startsWith('http') && !/\.(jpg|jpeg|png|webp)$/i.test(s)) {
             if (s.length > keterangan.length) keterangan = s;
           }
         }
       }
 
       const images = extractAllImages(raw);
-      return { kod, nama, jenis, kategori, subKategori, keterangan, images };
+      return { kod, nama: nama || '-', jenis, kategori, subKategori, keterangan, images };
     }
 
     async function init() {
@@ -627,41 +667,28 @@
       }
     }
 
+    // Kad Katalog 100% Bersih Gaya Portal Rasmi MOF: Gambar + Kod + Nama Barang sahaja
     function renderCatalogGridView(list, isFuzzy) {
       const fragment = document.createDocumentFragment();
       list.forEach((item, idx) => {
         const card = document.createElement('div');
         card.setAttribute('data-idx', idx);
-        card.className = 'open-modal-card catalog-card cursor-pointer bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col justify-between text-left';
+        card.className = 'open-modal-card catalog-card cursor-pointer bg-white rounded-xl border border-slate-200/90 p-4 flex flex-col text-left';
 
         const primaryImg = item.images[0] || '';
 
         card.innerHTML = `
-          <div>
-            <div class="relative w-full h-36 mb-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden p-2">
-              ${primaryImg ? `
-                <img src="${escapeAttr(primaryImg)}" alt="${escapeAttr(item.nama)}" loading="lazy"
-                  onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
-                  class="max-h-32 w-auto object-contain" />
-                <div class="hidden">${NO_IMAGE_SVG}</div>
-              ` : NO_IMAGE_SVG}
-
-              <span class="absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getBadgeStyle(item.jenis)}">
-                ${escapeHtml(item.jenis)}
-              </span>
-              ${isFuzzy ? `<span class="absolute top-2 left-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Hampir</span>` : ''}
-            </div>
-
-            <div class="mono text-xs font-bold text-slate-600 tracking-tight mb-0.5">${escapeHtml(item.kod)}</div>
-            <div class="text-xs sm:text-sm font-extrabold text-slate-900 uppercase leading-snug line-clamp-2">${escapeHtml(item.nama)}</div>
+          <div class="relative w-full h-36 mb-3 rounded-lg bg-slate-50/70 flex items-center justify-center overflow-hidden p-2">
+            ${primaryImg ? `
+              <img src="${escapeAttr(primaryImg)}" alt="${escapeAttr(item.nama)}" loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                class="max-h-32 w-auto object-contain" />
+              <div class="hidden">${NO_IMAGE_SVG}</div>
+            ` : NO_IMAGE_SVG}
+            ${isFuzzy ? `<span class="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Hampir</span>` : ''}
           </div>
-
-          <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-            <span class="text-blue-600 font-semibold">Lihat Butiran &rarr;</span>
-            <button type="button" data-kod="${escapeAttr(item.kod)}" class="copy-btn px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-900 hover:text-white text-slate-700 font-semibold transition">
-              Salin
-            </button>
-          </div>
+          <div class="mono text-xs font-medium text-slate-500 tracking-tight mb-1">${escapeHtml(item.kod)}</div>
+          <div class="text-xs sm:text-[13px] font-bold text-slate-900 uppercase leading-snug line-clamp-3">${escapeHtml(item.nama)}</div>
         `;
         fragment.appendChild(card);
       });
