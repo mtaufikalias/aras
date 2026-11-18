@@ -233,25 +233,72 @@
     const dbReadyNote = document.getElementById('dbReadyNote');
     const detailModal = document.getElementById('detailModal');
 
-    // Normalisasi struktur rekod supaya menyokong apa jua format JSON
+    // Auto-Kesan Format Array ATAU Objek dalam data_terkini.json
     function normalizeRecord(raw) {
+      if (Array.isArray(raw)) {
+        // Format Array: [kod, nama, kategori, keterangan, jenis] atau [kod, nama, kat, subkat, keterangan, jenis]
+        if (raw.length >= 6) {
+          return {
+            kod: String(raw[0] || '').trim(),
+            nama: String(raw[1] || '').trim(),
+            kategori: `${raw[2] || ''} > ${raw[3] || ''}`.replace(/^ > | > $/g, '').trim(),
+            keterangan: String(raw[4] || '').trim(),
+            jenis: normalizeJenis(raw[5], raw[0])
+          };
+        }
+        return {
+          kod: String(raw[0] || '').trim(),
+          nama: String(raw[1] || '').trim(),
+          kategori: String(raw[2] || '').trim(),
+          keterangan: String(raw[3] || '').trim(),
+          jenis: normalizeJenis(raw[4], raw[0])
+        };
+      }
+
+      // Format Objek: semak semua kemungkinan nama kunci
+      const vals = Object.values(raw || {});
+      const kod = String(raw.kod || raw.code || raw.kod_aset || raw.kod_stok || raw.id || vals[0] || '').trim();
+      const nama = String(raw.nama || raw.name || raw.item || raw.title || raw.perihal || vals[1] || '').trim();
+
+      let kategori = '';
+      if (raw.kategori && raw.subkategori) {
+        kategori = `${raw.kategori} > ${raw.subkategori}`;
+      } else if (raw.category && raw.subcategory) {
+        kategori = `${raw.category} > ${raw.subcategory}`;
+      } else {
+        kategori = String(raw.kategori || raw.category || raw.subkategori || vals[2] || '').trim();
+      }
+
+      const keterangan = String(raw.keterangan || raw.description || raw.maklumat || raw.desc || raw.info || vals[3] || '').trim();
+      const rawJenis = raw.jenis || raw.type || raw.kumpulan || raw.group || vals[4] || '';
+
       return {
-        kod: String(raw.kod || raw.code || raw.id || '').trim(),
-        nama: String(raw.nama || raw.name || raw.title || raw.perihal || '').trim(),
-        kategori: String(raw.kategori || raw.category || raw.subkategori || '').trim(),
-        keterangan: String(raw.keterangan || raw.description || raw.maklumat || raw.desc || '').trim(),
-        jenis: String(raw.jenis || raw.type || raw.kumpulan || 'Aset Alih').trim()
+        kod,
+        nama,
+        kategori,
+        keterangan,
+        jenis: normalizeJenis(rawJenis, kod)
       };
+    }
+
+    function normalizeJenis(rawJenis, kod) {
+      const j = String(rawJenis || '').toLowerCase();
+      if (j.includes('stok') || j.includes('stock')) return 'Stok';
+      if (j.includes('tak alih') || j.includes('immovable')) return 'Aset Tak Alih';
+      if (j.includes('tak ketara') || j.includes('intangible')) return 'Aset Tak Ketara';
+      if (j.includes('alih') || j.includes('asset')) return 'Aset Alih';
+      // Tebak daripada panjang kod jika jenis tiada
+      return String(kod || '').length > 10 ? 'Stok' : 'Aset Alih';
     }
 
     async function init() {
       try {
         const res = await fetch('data_terkini.json');
         const data = await res.json();
-        const rawList = Array.isArray(data) ? data : (data.records || data.data || []);
+        const rawList = Array.isArray(data) ? data : (data.records || data.data || data.items || []);
         allRecords = rawList.map(normalizeRecord);
 
-        document.getElementById('metaUpdated').textContent = data.updated_at || data.last_updated || '-';
+        document.getElementById('metaUpdated').textContent = data.updated_at || data.last_updated || data.tarikh || '-';
         document.getElementById('metaTotal').textContent = allRecords.length.toLocaleString('ms-MY');
         dbReadyNote.textContent = `Pangkalan data sedia (${allRecords.length.toLocaleString('ms-MY')} rekod rasmi dimuatkan).`;
 
@@ -415,7 +462,7 @@
         }
       }
 
-      // LAPISAN 4 (Sandaran Akhir): Padanan Token / Sebahagian Perkataan
+      // LAPISAN 4: Padanan Sebahagian Perkataan
       const tokens = q.split(/\s+/).filter(t => t.length >= 3);
       if (tokens.length > 0) {
         const tokenMatches = basePool.filter(r => {
