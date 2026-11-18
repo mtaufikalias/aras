@@ -1,42 +1,29 @@
 import urllib.request
+import ssl
 import re
 import json
-import gzip
-from datetime import datetime, timedelta
+from datetime import datetime
 
-BASE_URL = "https://knowledgebase.treasury.gov.my/kb/"
-HEADERS = {'User-Agent': 'Mozilla/5.0'}
+ASSET_URL = "https://knowledgebase.treasury.gov.my/kb/dump_asset.cfm"
+STOCK_URL = "https://knowledgebase.treasury.gov.my/kb/dump_stock.cfm"
 
-def fetch_url(url):
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://knowledgebase.treasury.gov.my/kb/'
+}
+
+# Bypass pengesahan SSL jika pelayan kerajaan menggunakan sijil rantaian lama
+SSL_CONTEXT = ssl._create_unverified_context()
+
+def fetch_dump(url):
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return resp.read().decode('latin1', errors='ignore')
-
-def find_latest_file(prefix):
-    # Cuba cari pautan terus dari halaman utama KB Treasury
-    try:
-        html = fetch_url(BASE_URL)
-        matches = re.findall(rf'href=["\']([^"\']*{prefix}_[^"\']+\.txt)["\']', html, re.IGNORECASE)
-        if matches:
-            link = matches[0]
-            return link if link.startswith('http') else BASE_URL + link.lstrip('/')
-    except Exception:
-        pass
-    
-    # Jika tiada di HTML, cuba teka tarikh hari ini hingga 7 hari lepas (format: 18.Nov.2026)
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    for i in range(8):
-        d = datetime.now() - timedelta(days=i)
-        fname = f"{prefix}_{d.day:02d}.{months[d.month-1]}.{d.year}.txt"
-        test_url = BASE_URL + fname
-        try:
-            req = urllib.request.Request(test_url, headers=HEADERS, method='HEAD')
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                if resp.status == 200:
-                    return test_url
-        except Exception:
-            continue
-    return None
+    with urllib.request.urlopen(req, timeout=120, context=SSL_CONTEXT) as resp:
+        content_disp = resp.headers.get('Content-Disposition', '')
+        fname_match = re.search(r'filename="?([^";]+)"?', content_disp, re.IGNORECASE)
+        fname = fname_match.group(1) if fname_match else url.split('/')[-1]
+        raw_bytes = resp.read()
+        print(f"Berjaya muat turun {fname} ({len(raw_bytes) / (1024*1024):.2f} MB)")
+        return raw_bytes.decode('latin1', errors='ignore'), fname
 
 def parse_sql_tuples(sql_text, table_name):
     rows = []
@@ -96,13 +83,13 @@ def clean_html(text):
     return re.sub(r'\s+', ' ', re.sub(r'<[^>]*>', ' ', text)).strip()
 
 def main():
-    aset_url = find_latest_file("prm_kodaset")
-    stok_url = find_latest_file("prm_kodstok")
     records = []
+    aset_fname = ""
+    stok_fname = ""
 
-    if aset_url:
-        print("Muat turun Aset:", aset_url)
-        sql_aset = fetch_url(aset_url)
+    # 1. Tarik data Aset dari dump_asset.cfm
+    try:
+        sql_aset, aset_fname = fetch_dump(ASSET_URL)
         c3 = {r[1]: r[2] for r in parse_sql_tuples(sql_aset, "code_003") if len(r) > 2}
         c4 = {r[1]: r[2] for r in parse_sql_tuples(sql_aset, "code_004") if len(r) > 2}
         for r in parse_sql_tuples(sql_aset, "code_005"):
@@ -120,13 +107,17 @@ def main():
                 "c1": c3.get(ctype[:3], ""), "c2": c4.get(ctype, ""),
                 "detail": detail[:300], "img": img_time
             })
+        print(f"Jumlah rekod Aset diekstrak: {len(records)}")
+    except Exception as e:
+        print(f"Ralat semasa menarik Aset: {e}")
 
-    if stok_url:
-        print("Muat turun Stok:", stok_url)
-        sql_stok = fetch_url(stok_url)
+    # 2. Tarik data Stok dari dump_stock.cfm
+    try:
+        sql_stok, stok_fname = fetch_dump(STOCK_URL)
         s1 = {r[1]: r[2] for r in parse_sql_tuples(sql_stok, "sps_stok_class1") if len(r) > 2}
         s2 = {f"{r[3]}-{r[1]}": r[2] for r in parse_sql_tuples(sql_stok, "sps_stok_class2") if len(r) > 3}
         s3 = {f"{r[3]}-{r[4]}-{r[1]}": r[2] for r in parse_sql_tuples(sql_stok, "sps_stok_class3") if len(r) > 4}
+        count_stok = 0
         for r in parse_sql_tuples(sql_stok, "sps_stok_class4"):
             if len(r) < 7 or not r[2]:
                 continue
@@ -140,18 +131,24 @@ def main():
                 "detail": "" if detail == "Sedang Dikemaskini" else detail[:300],
                 "img": r[10] if len(r) > 10 else None
             })
+            count_stok += 1
+        print(f"Jumlah rekod Stok diekstrak: {count_stok}")
+    except Exception as e:
+        print(f"Ralat semasa menarik Stok: {e}")
 
-    if records:
-        output = {
-            "updated_at": datetime.now().strftime("%d %b %Y, %I:%M %p"),
-            "aset_source": aset_url,
-            "stok_source": stok_url,
-            "total": len(records),
-            "records": records
-        }
-        with open("data_terkini.json", "w", encoding="utf-8") as f:
-            json.dump(output, f, ensure_ascii=False, separators=(',', ':'))
-        print(f"Berjaya simpan {len(records)} rekod ke data_terkini.json")
+    if not records:
+        raise RuntimeError("Tiada rekod berjaya diekstrak daripada kedua-dua pautan MOF.")
+
+    output = {
+        "updated_at": datetime.now().strftime("%d %b %Y, %I:%M %p"),
+        "aset_source": aset_fname,
+        "stok_source": stok_fname,
+        "total": len(records),
+        "records": records
+    }
+    with open("data_terkini.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, separators=(',', ':'))
+    print(f"SELESAI: {len(records)} jumlah rekod disimpan ke data_terkini.json")
 
 if __name__ == "__main__":
     main()
