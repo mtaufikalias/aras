@@ -293,24 +293,43 @@
 
     // Pemetaan tepat mengikut susunan sebenar data_terkini.json:
     // vals[0] = Kod (015002001)
-    // vals[1] = Jenis / Nama Barang (KERUSI PENGURUSAN TERTINGGI)
-    // vals[2] = Kumpulan (ASET_ALIH -> Aset Alih)
-    // vals[3] = Kategori (PERABOT)
-    // vals[4] = Sub Kategori (jika ada)
-    // vals[5] = Keterangan / Deskripsi (jika ada)
+    // vals[1] = Kumpulan (ASET_ALIH -> Aset Alih)
+    // vals[2] = Kategori (PERABOT)
+    // vals[3] = Ulangan kod (015002001) -> diabaikan
+    // vals[4] = Sub Kategori (KERUSI)
+    // vals[5] = Jenis / Nama Barang sebenar (KERUSI PENGURUSAN TERTINGGI, KERUSI KOMPUTER, dll.)
+    // vals[6]+ = Keterangan panjang & Gambar
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
 
       const kod = String(obj.kod || obj.code || vals[0] || '').trim();
-      const nama = cleanText(obj.nama || obj.name || vals[1]) || '-';
-      const jenis = normalizeJenis(obj.jenis || obj.type || vals[2], kod);
-      const kategori = cleanText(obj.kategori || obj.category || vals[3]) || '-';
-      const subKategori = cleanText(obj.sub_kategori || obj.subkategori || vals[4]) || '';
-      const keterangan = String(obj.keterangan || obj.description || obj.maklumat || vals[5] || '').trim();
-      const images = extractAllImages(raw);
+      const jenis = normalizeJenis(obj.jenis || obj.type || vals[1], kod);
+      const kategori = cleanText(obj.kategori || obj.category || vals[2]) || '-';
 
-      return { kod, nama, jenis, kategori, subKategori, keterangan, images };
+      const col3 = String(vals[3] || '').trim();
+      const isRepeatKod = col3 === kod || /^\d{6,}$/.test(col3);
+
+      let subKategori = cleanText(obj.sub_kategori || obj.subkategori || (isRepeatKod ? vals[4] : col3)) || '';
+      let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || (isRepeatKod ? vals[5] : vals[4])) || '';
+
+      if (!nama && subKategori) {
+        nama = subKategori;
+        subKategori = '';
+      }
+
+      let keterangan = String(obj.keterangan || obj.description || obj.maklumat || '').trim();
+      if (!keterangan) {
+        for (let i = 5; i < vals.length; i++) {
+          const s = String(vals[i] || '').trim();
+          if (s && s !== nama && s !== subKategori && !s.startsWith('http') && !/\.(jpg|jpeg|png|webp)$/i.test(s)) {
+            if (s.length > keterangan.length) keterangan = s;
+          }
+        }
+      }
+
+      const images = extractAllImages(raw);
+      return { kod, nama: nama || '-', jenis, kategori, subKategori, keterangan, images };
     }
 
     async function init() {
