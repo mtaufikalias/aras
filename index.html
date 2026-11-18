@@ -161,7 +161,6 @@
       </div>
 
       <div class="p-6 max-h-[78vh] overflow-y-auto space-y-5">
-        <!-- Gambar Besar / No Image Placeholder -->
         <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 flex items-center justify-center min-h-[160px]">
           <img id="modalImage" src="" alt="Gambar Aset" class="hidden max-h-52 w-auto object-contain rounded-lg" />
           <div id="modalNoImage" class="flex flex-col items-center justify-center text-slate-400 py-4">
@@ -316,6 +315,8 @@
       return [...new Set(urls)];
     }
 
+    // Pemetaan tepat mengikut struktur sebenar rekod MOF:
+    // vals[0]=kod, vals[1]=jenis, vals[2]=kategori (PERABOT), vals[3]=subKategori (KERUSI), vals[4]=nama (KERUSI PENGURUSAN TERTINGGI), vals[5]=keterangan
     function normalizeRecord(raw) {
       const vals = Array.isArray(raw) ? raw : Object.values(raw || {});
       const obj = Array.isArray(raw) ? {} : (raw || {});
@@ -324,16 +325,15 @@
       const jenis = normalizeJenis(obj.jenis || obj.type || vals[1], kod);
       const kategori = cleanText(obj.kategori || obj.category || vals[2]) || '-';
 
-      const col3 = String(vals[3] || '').trim();
-      const isRepeatKod = col3 === kod || /^\d{6,}$/.test(col3);
+      let subKategori = cleanText(obj.sub_kategori || obj.subkategori || vals[3]) || '';
+      if (subKategori === kod || /^\d{6,}$/.test(subKategori)) subKategori = '';
 
-      let subKategori = cleanText(obj.sub_kategori || obj.subkategori || (isRepeatKod ? vals[4] : col3)) || '';
-      let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || (isRepeatKod ? vals[5] : vals[4])) || '';
-
+      let nama = cleanText(obj.nama || obj.name || obj.jenis_aset || vals[4]) || '';
       if (!nama && subKategori) {
         nama = subKategori;
         subKategori = '';
       }
+      if (!nama) nama = kategori;
 
       let keterangan = String(obj.keterangan || obj.description || obj.maklumat || '').trim();
       if (!keterangan) {
@@ -346,7 +346,7 @@
       }
 
       const images = extractAllImages(raw);
-      return { kod, nama: nama || '-', jenis, kategori, subKategori, keterangan, images };
+      return { kod, nama, jenis, kategori, subKategori, keterangan, images };
     }
 
     async function init() {
@@ -627,7 +627,6 @@
       }
     }
 
-    // Kad Katalog Bersih Gaya MOF: Gambar / No Image + Kod + Nama Sahaja
     function renderCatalogGridView(list, isFuzzy) {
       const fragment = document.createDocumentFragment();
       list.forEach((item, idx) => {
