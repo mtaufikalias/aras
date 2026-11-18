@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARAS — Aplikasi Rujukan & Pengelasan Pintar Aset & Stok (1PP / MOF)</title>
+  <title>ARAS — Antaramuka Rujukan Aset &amp; Stok</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Inter -->
@@ -12,36 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            navy: {
-              900: '#0a192f',
-              800: '#112240',
-              700: '#1d3557',
-            },
-            gold: {
-              400: '#fbbf24',
-              500: '#f59e0b',
-              600: '#d97706',
-            }
-          }
-        }
-      }
-    };
-  </script>
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
       color: #0f172a;
     }
-    /* Custom subtle scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -60,67 +36,52 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- TOP OFFICIAL HEADER -->
-  <header class="bg-gradient-to-r from-[#0a192f] via-[#112240] to-[#1d3557] text-white shadow-lg border-b-4 border-amber-500 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <!-- Brand & Title -->
-        <div class="flex items-center gap-3.5">
-          <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center shrink-0 shadow-inner">
-            <i data-lucide="shield-check" class="w-6 h-6 text-amber-400"></i>
+  <!-- HEADER KORPORAT BERSIH -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <!-- Jenama & Tajuk -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
+            <i data-lucide="layers" class="w-5 h-5 text-blue-400"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2.5">
-              <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">ARAS</h1>
-              <span class="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-md bg-amber-500 text-slate-950">
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-extrabold tracking-tight text-white">ARAS</h1>
+              <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-600/30 text-blue-300 border border-blue-500/30">
                 1PP / MOF
               </span>
             </div>
-            <p class="text-xs sm:text-sm text-slate-300 font-medium">
-              Aplikasi Rujukan &amp; Pengelasan Pintar Aset Alih, Aset Tak Alih &amp; Stok Kerajaan
+            <p class="text-xs text-slate-300 font-medium">
+              Antaramuka Rujukan Aset &amp; Stok
             </p>
           </div>
         </div>
 
-        <!-- Live Sync Status & Controls -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button onclick="openStatusModal()" id="syncBadgeBtn"
-            class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs transition cursor-pointer text-left">
-            <span id="syncDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
-            <div>
-              <div id="syncRecordCount" class="font-bold text-white leading-tight">Memuatkan data...</div>
-              <div id="syncTimestamp" class="text-[11px] text-slate-300 leading-tight">Menyemak data_terkini.json</div>
-            </div>
-          </button>
+        <!-- Status Rekod & Butang Tetapan AI -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs text-slate-300 flex items-center gap-2">
+            <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+            <span id="headerStatusText">Memuatkan data...</span>
+          </div>
 
-          <button onclick="forceSyncData()" id="btnRefreshData" title="Segerak semula data terkini dari pelayan"
-            class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-amber-300 transition cursor-pointer">
-            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-          </button>
-
-          <button onclick="openAiModal('TEXT')" title="Tanya AI ARAS Pintar & Tetapan API Key"
-            class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-amber-400/40 text-amber-300 font-bold text-xs transition cursor-pointer">
-            <i data-lucide="sparkles" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">ARAS Pintar</span>
-            <i data-lucide="settings" class="w-3.5 h-3.5 opacity-80"></i>
-          </button>
-
-          <button onclick="openAiModal('CAMERA')"
-            class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-md transition cursor-pointer">
-            <i data-lucide="camera" class="w-4 h-4"></i>
-            <span>Imbas Gambar (AI)</span>
+          <button onclick="openAiSettingsModal()"
+            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white text-xs font-semibold transition cursor-pointer">
+            <i data-lucide="settings" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>Tetapan AI</span>
+            <span id="aiKeyStatusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
           </button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- MAIN CONTENT CONTAINER -->
+  <!-- KANDUNGAN UTAMA -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
 
-    <!-- SEARCH & FILTER PANEL -->
-    <section class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-6 space-y-4">
-      <!-- Search Input Bar -->
+    <!-- KOTAK CARIAN & PENAPIS KATEGORI (BERSIH & MINIMALIS) -->
+    <section class="bg-white rounded-2xl shadow-xs border border-slate-200/90 p-4 sm:p-5 space-y-4">
+      <!-- Bar Carian -->
       <div class="relative flex items-center">
         <div class="absolute left-4 text-slate-400 pointer-events-none">
           <i data-lucide="search" class="w-5 h-5"></i>
@@ -128,1504 +89,705 @@
         <input
           type="text"
           id="searchInput"
-          placeholder="Cari nama barang (BM / BI / moden), kod 1PP... Cth: induction cooker, air fryer, laptop, powerbank"
-          class="w-full pl-12 pr-36 py-3.5 text-sm sm:text-base bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition font-medium text-slate-900 placeholder:text-slate-400"
+          placeholder="Cari nama barang, kod aset, atau stok (cth: kerusi, komputer, dapur)..."
+          class="w-full pl-12 pr-12 py-3.5 text-sm sm:text-base bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition font-medium text-slate-900 placeholder:text-slate-400"
           autocomplete="off"
         />
-        <div class="absolute right-2.5 flex items-center gap-1.5">
-          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden p-1.5 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer" title="Padam carian">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-          <button onclick="triggerSmartMatchMode()" id="synonymIndicator"
-            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] font-bold border border-amber-300 transition cursor-pointer"
-            title="Klik untuk cari padanan paling hampir menggunakan ARAS Pintar">
-            <i data-lucide="sparkles" class="w-3 h-3 text-amber-600"></i> ARAS Pintar
-          </button>
-        </div>
+        <button id="clearSearchBtn" onclick="clearSearch()" title="Padam carian"
+          class="hidden absolute right-3.5 p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
 
-      <!-- Category Pills & Sub-category Dropdown -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pt-1">
-        <!-- Category Pills -->
+      <!-- Pil Penapis Kategori -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-1.5" id="categoryPills">
           <button data-cat="ALL" onclick="setCategoryFilter('ALL')"
-            class="cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0a192f] text-white shadow-xs transition cursor-pointer">
+            class="cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer">
             Semua (<span id="count-ALL">0</span>)
           </button>
           <button data-cat="ASET_ALIH" onclick="setCategoryFilter('ASET_ALIH')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-800 transition cursor-pointer">
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
             Aset Alih (<span id="count-ASET_ALIH">0</span>)
           </button>
-          <button data-cat="STOK" onclick="setCategoryFilter('STOK')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition cursor-pointer">
-            Stok (<span id="count-STOK">0</span>)
-          </button>
           <button data-cat="ASET_TAK_ALIH" onclick="setCategoryFilter('ASET_TAK_ALIH')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-purple-50 hover:text-purple-800 transition cursor-pointer">
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
             Aset Tak Alih (<span id="count-ASET_TAK_ALIH">0</span>)
           </button>
           <button data-cat="ASET_TAK_KETARA" onclick="setCategoryFilter('ASET_TAK_KETARA')"
-            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-800 transition cursor-pointer">
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
             Aset Tak Ketara (<span id="count-ASET_TAK_KETARA">0</span>)
           </button>
-        </div>
-
-        <!-- Sub-category (c1) Filter -->
-        <div class="flex items-center gap-2">
-          <label for="subCatSelect" class="text-xs font-semibold text-slate-500 shrink-0">Sub-Kategori:</label>
-          <select id="subCatSelect" onchange="applyFilters()"
-            class="w-full sm:w-64 px-3 py-2 text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800">
-            <option value="">Semua Sub-Kategori / Kelas</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Quick Suggested Keywords -->
-      <div class="flex flex-wrap items-center gap-1.5 text-xs pt-1 border-t border-slate-100">
-        <span class="text-slate-400 font-medium mr-1">Cuba carian moden:</span>
-        <button onclick="quickSearch('induction cooker')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/70 font-semibold transition cursor-pointer">induction cooker</button>
-        <button onclick="quickSearch('air fryer')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/70 font-semibold transition cursor-pointer">air fryer</button>
-        <button onclick="quickSearch('powerbank')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">powerbank</button>
-        <button onclick="quickSearch('walkie talkie')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">walkie talkie</button>
-        <button onclick="quickSearch('Laptop')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">Laptop</button>
-        <button onclick="quickSearch('water dispenser')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 hover:text-amber-900 text-slate-600 font-medium transition cursor-pointer">water dispenser</button>
-      </div>
-    </section>
-
-    <!-- ARAS PINTAR: SMART SIMILARITY MATCH BANNER -->
-    <section id="smartMatchBanner" class="hidden bg-gradient-to-r from-[#0a192f] via-[#112240] to-[#1d3557] text-white border-l-4 border-amber-400 rounded-2xl p-4 sm:p-5 shadow-md">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div class="flex items-start gap-3.5">
-          <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-            <i data-lucide="sparkles" class="w-5 h-5"></i>
-          </div>
-          <div class="space-y-1.5 text-xs sm:text-sm">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[11px] font-extrabold uppercase tracking-wide">
-                ✨ ARAS Pintar: Padanan Hampir Serupa
-              </span>
-              <span id="smartMatchSourceLabel" class="text-xs text-amber-200 font-medium"></span>
-            </div>
-            <p id="smartMatchExplanation" class="text-slate-100 leading-relaxed"></p>
-            <div id="smartMatchKeywordChips" class="flex flex-wrap items-center gap-1.5 pt-1"></div>
-          </div>
-        </div>
-        <div class="shrink-0">
-          <button onclick="openAiModal('TEXT', document.getElementById('searchInput').value)"
-            class="w-full md:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-sm transition cursor-pointer">
-            <i data-lucide="bot" class="w-4 h-4"></i>
-            <span>Tanya AI Cadangan Lain</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- DUAL-STATUS OVERLAP ADVISORY BANNER (ASET ALIH vs STOK) -->
-    <section id="overlapBanner" class="hidden bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-2xl p-4 sm:p-5 shadow-sm">
-      <div class="flex items-start gap-3.5">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-        </div>
-        <div class="space-y-1.5 text-xs sm:text-sm text-amber-950">
-          <h2 class="font-extrabold text-amber-900 flex items-center gap-2">
-            <span>Amaran Pengelasan Bertindih Dikesan (Aset Alih &amp; Stok)</span>
-            <span id="overlapStatsBadge" class="px-2 py-0.5 text-[11px] rounded-full bg-amber-200/80 text-amber-900 font-bold"></span>
-          </h2>
-          <p class="leading-relaxed text-amber-900/90">
-            Item carian ini wujud dalam kedua-dua senarai <strong>Aset Alih</strong> dan <strong>Stok</strong> di portal Perbendaharaan. Sila rujuk peraturan <strong>1Pekeliling Perbendaharaan (1PP)</strong> sebelum mendaftar:
-          </p>
-          <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 text-xs">
-            <li class="bg-white/70 rounded-xl p-2.5 border border-amber-200/80">
-              <span class="font-bold text-emerald-800 block mb-0.5">✔ Daftar sebagai STOK (AM 6.1) jika:</span>
-              Barang guna habis, nilai rendah, kegunaan harian pejabat, atau alat ganti yang dipasang pada peralatan sedia ada (cth: kalkulator poket/meja biasa, pemacu pen, gunting, stapler).
-            </li>
-            <li class="bg-white/70 rounded-xl p-2.5 border border-amber-200/80">
-              <span class="font-bold text-blue-800 block mb-0.5">✔ Daftar sebagai ASET ALIH (AM 1.1) jika:</span>
-              Peralatan berkapasiti tinggi / tugas berat (<em>heavy-duty</em>), mempunyai ciri teknikal khas, jangka hayat panjang dan tidak luak digunakan (cth: mesin kira bercetak, mesin penebuk lubang industri).
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- TOOLBAR: RESULT COUNT, VIEW SWITCHER & CSV EXPORT -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white px-4 py-3 rounded-2xl border border-slate-200/80 shadow-xs">
-      <div class="text-xs sm:text-sm text-slate-600 font-medium">
-        Menunjukkan <span id="showingRange" class="font-bold text-slate-900">0</span> daripada
-        <span id="totalFilteredCount" class="font-bold text-blue-700">0</span> rekod padanan
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- View Switcher -->
-        <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-          <button id="btnViewCard" onclick="switchView('CARD')"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer">
-            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-            <span>Paparan Kad</span>
-          </button>
-          <button id="btnViewTable" onclick="switchView('TABLE')"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">
-            <i data-lucide="table-2" class="w-3.5 h-3.5"></i>
-            <span>Jadual Penuh</span>
+          <button data-cat="STOK" onclick="setCategoryFilter('STOK')"
+            class="cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer">
+            Stok (<span id="count-STOK">0</span>)
           </button>
         </div>
 
-        <!-- Export CSV -->
-        <button onclick="exportToCSV()"
-          class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer">
-          <i data-lucide="download" class="w-3.5 h-3.5"></i>
-          <span>Eksport CSV</span>
+        <!-- Butang Tanya AI Halus (Sentiasa tersedia jika pengguna mahu nasihat pengelasan) -->
+        <button id="subtleAskAiBtn" onclick="triggerAskAi()"
+          class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 text-xs font-semibold transition cursor-pointer">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span>Tanya AI</span>
         </button>
       </div>
+    </section>
+
+    <!-- BANNER PADANAN HAMPIR (DIPAPARKAN BILA MENGGUNAKAN PEMETAAN SINONIM) -->
+    <section id="closeMatchBanner" class="hidden bg-blue-50/90 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-start gap-3">
+        <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wide shrink-0 mt-0.5">
+          Padanan Hampir
+        </span>
+        <div class="text-xs sm:text-sm text-slate-700 leading-relaxed" id="closeMatchDescription"></div>
+      </div>
+      <button onclick="triggerAskAi()"
+        class="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition cursor-pointer">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        <span>Tanya AI</span>
+      </button>
+    </section>
+
+    <!-- PANEL JAWAPAN TANYA AI (GEMINI 2.5 FLASH) -->
+    <section id="aiResponsePanel" class="hidden bg-white border border-blue-200 rounded-2xl p-5 shadow-xs space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </span>
+          <h3 class="font-bold text-sm text-slate-900">Cadangan Pengelasan 1PP (Tanya AI)</h3>
+        </div>
+        <button onclick="document.getElementById('aiResponsePanel').classList.add('hidden')"
+          class="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="aiResponseContent" class="text-xs sm:text-sm text-slate-700 space-y-2.5"></div>
+    </section>
+
+    <!-- BAR MAKLUMAT HASIL CARIAN -->
+    <div id="resultsToolbar" class="flex items-center justify-between text-xs text-slate-500 px-1">
+      <div>
+        Menunjukkan <span id="showingCount" class="font-bold text-slate-800">0</span> daripada
+        <span id="totalMatchedCount" class="font-bold text-slate-800">0</span> rekod
+      </div>
+      <div id="pageIndicator" class="font-medium">Halaman 1</div>
     </div>
 
-    <!-- LOADING SKELETON / INITIAL STATE -->
+    <!-- KEADAAN MEMUATKAN -->
     <div id="loadingState" class="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
-      <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-spin">
-        <i data-lucide="loader-2" class="w-6 h-6"></i>
+      <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-spin">
+        <i data-lucide="loader-2" class="w-5 h-5"></i>
       </div>
-      <h3 class="text-base font-bold text-slate-900">Menyegerak Pangkalan Data Rasmi MOF...</h3>
-      <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-        Sedang memuat turun indeks kod aset &amp; stok terkini daripada <code class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">data_terkini.json</code>.
-      </p>
+      <p class="text-sm font-semibold text-slate-700">Memuatkan pangkalan data ARAS...</p>
     </div>
 
-    <!-- EMPTY SEARCH STATE -->
+    <!-- KEADAAN KOSONG (0 REKOD) DENGAN BUTANG TANYA AI -->
     <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center space-y-4">
-      <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
-        <i data-lucide="search-x" class="w-7 h-7"></i>
+      <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
+        <i data-lucide="search-x" class="w-6 h-6"></i>
       </div>
-      <div class="space-y-1.5">
-        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">
-          Tiada Rekod Tepat untuk "<span id="emptyQueryText" class="text-blue-700"></span>"
+      <div class="space-y-1">
+        <h3 class="text-base font-bold text-slate-900">
+          Tiada rekod ditemui untuk "<span id="emptyQueryLabel" class="text-blue-600"></span>"
         </h3>
-        <p class="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-          Istilah komersial atau moden sering tiada dalam senarai rasmi Perbendaharaan. Gunakan <strong>ARAS Pintar (AI)</strong> untuk menganalisis fungsi barang ini dan mencadangkan kod rasmi 1PP yang paling hampir.
+        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+          Istilah ini mungkin menggunakan nama komersial. Klik butang di bawah untuk mendapatkan cadangan kod rasmi Perbendaharaan yang paling hampir.
         </p>
       </div>
       <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
-        <button onclick="openAiModal('TEXT', document.getElementById('searchInput').value)"
-          class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-extrabold shadow-md transition cursor-pointer">
+        <button onclick="triggerAskAi()"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer">
           <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span>Tanya AI ARAS Pintar (Cadang Kod Hampir)</span>
+          <span>Tanya AI</span>
         </button>
-        <button onclick="clearSearch()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer">
-          Set Semula Carian
+        <button onclick="clearSearch()"
+          class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition cursor-pointer">
+          Set Semula
         </button>
       </div>
     </div>
 
-    <!-- CARD GRID VIEW -->
-    <div id="cardGridContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <!-- SENARAI KAD HASIL CARIAN -->
+    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-    <!-- FULL TABLE VIEW -->
-    <div id="tableViewContainer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-slate-900 text-white text-xs uppercase tracking-wider">
-              <th class="py-3.5 px-4 font-bold">Kod 1PP</th>
-              <th class="py-3.5 px-4 font-bold">Kategori</th>
-              <th class="py-3.5 px-4 font-bold">Perihal / Nama Item</th>
-              <th class="py-3.5 px-4 font-bold">Kelas / Sub-Kategori</th>
-              <th class="py-3.5 px-4 font-bold text-right">Tindakan</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- PAGINATION BAR -->
-    <div id="paginationBar" class="hidden flex flex-col sm:flex-row items-center justify-between gap-3 bg-white px-4 py-3.5 rounded-2xl border border-slate-200 shadow-xs">
-      <div class="text-xs text-slate-600 font-medium">
-        Halaman <span id="currentPageLabel" class="font-bold text-slate-900">1</span> daripada
-        <span id="totalPagesLabel" class="font-bold text-slate-900">1</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="btnPrevPage" onclick="changePage(-1)"
-          class="flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold text-slate-700 transition cursor-pointer">
-          <i data-lucide="chevron-left" class="w-4 h-4"></i> Sebelum
-        </button>
-        <button id="btnNextPage" onclick="changePage(1)"
-          class="flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none text-xs font-bold text-slate-700 transition cursor-pointer">
-          Seterusnya <i data-lucide="chevron-right" class="w-4 h-4"></i>
-        </button>
-      </div>
+    <!-- BUTANG MUAT LAGI / PAGINASI -->
+    <div id="loadMoreWrapper" class="hidden pt-2 pb-4 text-center">
+      <button onclick="loadMoreResults()"
+        class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs sm:text-sm font-bold shadow-xs transition cursor-pointer">
+        <span>Muat Lagi Rekod</span>
+        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+      </button>
     </div>
 
   </main>
 
-  <!-- FOOTER -->
-  <footer class="bg-white border-t border-slate-200 mt-10 py-5">
+  <!-- FOOTER RINGKAS -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-      <div>
-        <strong>ARAS (1PP / MOF)</strong> &mdash; Sistem Rujukan Pantas Pengurusan Aset &amp; Stor Kerajaan Malaysia.
-      </div>
-      <div>
-        Sumber Data Rasmi: <a href="https://knowledgebase.treasury.gov.my/kb/" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-medium">Knowledgebase Perbendaharaan Malaysia</a>
-      </div>
+      <div><strong>ARAS</strong> &mdash; Antaramuka Rujukan Aset &amp; Stok (1PP / MOF)</div>
+      <div>Sumber Rasmi: <a href="https://knowledgebase.treasury.gov.my/kb/" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-medium">Portal Knowledgebase Perbendaharaan</a></div>
     </div>
   </footer>
 
-  <!-- MODAL 1: OFFICIAL MOF IMAGE PREVIEW & ITEM DETAILS -->
-  <div id="imageModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeModal('imageModal')">
-    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200" onclick="event.stopPropagation()">
-      <div class="bg-[#0a192f] text-white px-5 py-4 flex items-center justify-between">
+  <!-- MODAL TETAPAN AI (GOOGLE GEMINI API KEY) -->
+  <div id="aiSettingsModal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeAiSettingsModal()">
+    <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-xl border border-slate-200" onclick="event.stopPropagation()">
+      <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <i data-lucide="image" class="w-5 h-5 text-amber-400"></i>
-          <h3 class="font-bold text-sm sm:text-base">Rujukan Visual Rasmi Perbendaharaan</h3>
+          <i data-lucide="key-round" class="w-4 h-4 text-blue-400"></i>
+          <h3 class="font-bold text-sm">Tetapan AI (Google Gemini)</h3>
         </div>
-        <button onclick="closeModal('imageModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-      <div class="p-5 space-y-4">
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-center min-h-[220px] relative">
-          <img id="modalPreviewImg" src="" alt="Gambar Rujukan Rasmi MOF"
-            class="max-h-64 w-auto object-contain rounded-lg hidden"
-            onload="this.classList.remove('hidden'); document.getElementById('modalImgFallback').classList.add('hidden');"
-            onerror="this.classList.add('hidden'); document.getElementById('modalImgFallback').classList.remove('hidden');" />
-          <div id="modalImgFallback" class="text-center space-y-2 py-6">
-  <!-- MODAL 2: ARAS PINTAR AI ASSISTANT (TEXT SIMILARITY + GEMINI VISION) -->
-  <div id="aiModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" onclick="closeModal('aiModal')">
-    <div class="bg-white rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200 my-8" onclick="event.stopPropagation()">
-      <div class="bg-gradient-to-r from-[#0a192f] to-[#1d3557] text-white px-5 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
-          <div>
-            <h3 class="font-bold text-sm sm:text-base leading-tight">ARAS Pintar — Pembantu Pengelasan Kod 1PP</h3>
-            <p class="text-[11px] text-slate-300">Cadangan barang hampir serupa &amp; pengesanan objek melalui kamera</p>
-          </div>
-        </div>
-        <button onclick="closeModal('aiModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-5 space-y-4">
-        <!-- Mode Switcher Tabs inside AI Modal -->
-        <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <button id="tabAiText" onclick="switchAiTab('TEXT')"
-            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer">
-            <i data-lucide="text-search" class="w-3.5 h-3.5 text-amber-600"></i>
-            <span>Tanya Nama Barang (Teks)</span>
-          </button>
-          <button id="tabAiCamera" onclick="switchAiTab('CAMERA')"
-            class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer">
-            <i data-lucide="camera" class="w-3.5 h-3.5 text-blue-600"></i>
-            <span>Imbas Gambar / Kamera</span>
-          </button>
-        </div>
-
-        <!-- Gemini API Key Setup -->
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
-          <div class="flex items-center justify-between">
-            <label for="geminiApiKeyInput" class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i>
-              Kunci API Google Gemini (Percuma RM0 — Disimpan Lokal)
-            </label>
-            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-[11px] text-blue-600 hover:underline font-semibold">
-              Dapatkan Kunci Percuma &rarr;
-            </a>
-          </div>
-          <div class="flex gap-2">
-            <input type="password" id="geminiApiKeyInput" placeholder="Tampal AIzaSy... di sini"
-              class="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600" />
-            <button onclick="saveGeminiKey()" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer">
-              Simpan
-            </button>
-          </div>
-        </div>
-
-        <!-- PANEL A: TEXT QUERY TO GEMINI AI -->
-        <div id="aiTextPanel" class="space-y-3">
-          <p class="text-xs text-slate-600 leading-relaxed">
-            Masukkan nama barang moden, jenama, atau penerangan kegunaan barang. Pakar AI 1PP akan mencadangkan kategori (Aset Alih / Stok) serta <strong>3–5 kata kunci rasmi MOF</strong> yang paling hampir.
-          </p>
-          <div class="space-y-2">
-            <label for="aiTextQueryInput" class="text-xs font-bold text-slate-800">Nama / Penerangan Barang:</label>
-            <div class="flex gap-2">
-              <input type="text" id="aiTextQueryInput" placeholder="Cth: induction cooker, smart board, mesin kopi kapsul..."
-                class="flex-1 px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
-                onkeydown="if(event.key==='Enter') askGeminiForSimilarItems()" />
-              <button id="btnAskGeminiText" onclick="askGeminiForSimilarItems()"
-                class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer inline-flex items-center gap-1.5 shrink-0">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Tanya AI
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANEL B: CAMERA / UPLOAD DROPZONE -->
-        <div id="aiCameraPanel" class="hidden border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-5 text-center space-y-3 bg-slate-50/50 transition">
-          <input type="file" id="aiImageInput" accept="image/*" capture="environment" class="hidden" onchange="handleAiImageSelect(event)" />
-          <div id="aiImagePreviewWrapper" class="hidden">
-            <img id="aiImagePreview" src="" alt="Pratonton Imbasan" class="max-h-48 mx-auto rounded-xl shadow-sm border border-slate-200" />
-          </div>
-          <div id="aiUploadPlaceholder" class="space-y-1.5 py-2">
-            <div class="w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
-              <i data-lucide="camera" class="w-5 h-5"></i>
-            </div>
-            <p class="text-xs font-bold text-slate-800">Klik butang di bawah untuk buka kamera atau pilih fail gambar</p>
-            <p class="text-[11px] text-slate-400">Menyokong JPG, PNG, WEBP</p>
-          </div>
-          <div class="flex flex-wrap justify-center gap-2">
-            <button onclick="document.getElementById('aiImageInput').click()"
-              class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5">
-              <i data-lucide="upload" class="w-3.5 h-3.5"></i> Pilih Gambar / Kamera
-            </button>
-            <button id="btnAnalyzeAi" onclick="analyzeImageWithGemini()" disabled
-              class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:pointer-events-none text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-1.5">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analisis Gambar
-            </button>
-          </div>
-        </div>
-
-        <!-- AI Result Box -->
-        <div id="aiResultBox" class="hidden bg-blue-50/90 border border-blue-200 rounded-xl p-4 space-y-2.5 text-xs"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL 3: DATA STATUS & MANUAL FALLBACK UPLOAD -->
-  <div id="statusModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto" onclick="closeModal('statusModal')">
-    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 my-8" onclick="event.stopPropagation()">
-      <div class="bg-[#0a192f] text-white px-5 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i data-lucide="database" class="w-5 h-5 text-emerald-400"></i>
-          <h3 class="font-bold text-sm sm:text-base">Status Pangkalan Data ARAS</h3>
-        </div>
-        <button onclick="closeModal('statusModal')" class="text-slate-300 hover:text-white p-1 rounded-lg cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button onclick="closeAiSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
+          <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
 
       <div class="p-5 space-y-4 text-xs sm:text-sm">
-        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-          <div class="flex justify-between">
-            <span class="text-slate-500">Sumber Utama:</span>
-            <span class="font-bold text-slate-900">Automasi GitHub (data_terkini.json)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Kemaskini Terakhir:</span>
-            <span id="modalUpdatedAt" class="font-bold text-blue-700">-</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Fail Sumber Aset:</span>
-            <span id="modalAsetSource" class="font-mono text-xs text-slate-800">-</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-500">Fail Sumber Stok:</span>
-            <span id="modalStokSource" class="font-mono text-xs text-slate-800">-</span>
-          </div>
-          <div class="flex justify-between pt-1 border-t border-slate-200">
-            <span class="text-slate-600 font-semibold">Jumlah Keseluruhan Rekod:</span>
-            <span id="modalTotalRecords" class="font-extrabold text-emerald-700">0</span>
-          </div>
+        <p class="text-slate-600 leading-relaxed text-xs">
+          Fungsi <strong>Tanya AI</strong> menggunakan model <strong>Gemini 2.5 Flash</strong> secara percuma (RM0) untuk mencadangkan pengelasan kod 1PP apabila istilah carian tiada dalam pangkalan data. Kunci API anda hanya disimpan dalam pelayar ini (<code class="bg-slate-100 px-1 rounded">localStorage</code>).
+        </p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5 text-xs text-slate-600">
+          <div class="font-bold text-slate-800">Cara mendapatkan Kunci API Percuma:</div>
+          <ol class="list-decimal list-inside space-y-1">
+            <li>Buka <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-blue-600 hover:underline font-semibold">Google AI Studio</a> dan log masuk akaun Google.</li>
+            <li>Klik <strong>Create API key</strong> dan salin kod bermula dengan <code class="bg-white px-1 border rounded">AIza...</code>.</li>
+            <li>Tampal kod tersebut di ruangan di bawah dan klik <strong>Simpan</strong>.</li>
+          </ol>
         </div>
 
-        <div class="space-y-2 pt-2 border-t border-slate-200">
-          <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pilihan Sandaran Manual (Jika Guna Offline Tanpa Internet)</h4>
-          <p class="text-xs text-slate-500">
-            Secara automatik, laman web ini sentiasa menarik data terkini dari GitHub. Namun, anda juga boleh memuat naik fail <code class="bg-slate-100 px-1 rounded">.txt</code> mentah MOF secara manual di bawah jika perlu:
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <label class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer transition">
-              <i data-lucide="file-up" class="w-4 h-4 text-blue-600"></i>
-              <span>Muat Naik Kod Aset (.txt)</span>
-              <input type="file" accept=".txt,.sql" class="hidden" onchange="handleManualSqlUpload(event, 'ASET')" />
-            </label>
-            <label class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer transition">
-              <i data-lucide="file-up" class="w-4 h-4 text-emerald-600"></i>
-              <span>Muat Naik Kod Stok (.txt)</span>
-              <input type="file" accept=".txt,.sql" class="hidden" onchange="handleManualSqlUpload(event, 'STOK')" />
-            </label>
-          </div>
+        <div class="space-y-1.5">
+          <label for="geminiKeyInput" class="block text-xs font-bold text-slate-800">Kunci API Google Gemini:</label>
+          <input type="password" id="geminiKeyInput" placeholder="AIzaSy..."
+            class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white" />
         </div>
 
-        <div class="flex justify-between items-center pt-2">
-          <button onclick="forceSyncData(); closeModal('statusModal');"
-            class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Segerak Sekarang
+        <div class="flex items-center justify-between pt-2">
+          <button onclick="clearGeminiKey()" class="text-xs font-semibold text-rose-600 hover:underline cursor-pointer">
+            Padam Kunci
           </button>
-          <button onclick="closeModal('statusModal')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer">
-            Tutup
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="closeAiSettingsModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition cursor-pointer">
+              Batal
+            </button>
+            <button onclick="saveGeminiKey()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
+              Simpan Tetapan
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATION -->
+  <!-- TOAST NOTIFIKASI SALIN KOD -->
   <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-xs sm:text-sm font-medium">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 flex items-center gap-2 text-xs font-semibold">
       <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-      <span id="toastMsg">Kod berjaya disalin!</span>
+      <span id="toastMessage">Kod berjaya disalin!</span>
     </div>
   </div>
 
-  <!-- APPLICATION SCRIPT -->
+  <!-- SKRIP APLIKASI -->
   <script>
     // =========================================================================
-    // 1. STATE, DEMO FALLBACK DATASET & SMART THESAURUS (ARAS PINTAR LAYER 1)
+    // 1. PEMETAAN SINONIM KETAT ("PADANAN HAMPIR" - RM0, TANPA API KEY)
     // =========================================================================
-    const DB_NAME = 'ARAS_MOF_DB';
-    const STORE_NAME = 'aras_cache';
-    const PAGE_SIZE = 48;
+    const CLOSE_MATCH_DICTIONARY = [
+      { terms: ['induction cooker', 'induction', 'dapur aruhan'], targets: ['dapur elektrik'] },
+      { terms: ['air fryer', 'airfryer', 'penggoreng udara'], targets: ['ketuhar'] },
+      { terms: ['powerbank', 'power bank'], targets: ['bateri'] },
+      { terms: ['walkie talkie', 'walkie-talkie'], targets: ['radio dua hala', 'alat perhubungan'] },
+      { terms: ['laptop'], targets: ['komputer riba'] },
+      { terms: ['thumbdrive', 'pendrive', 'thumb drive', 'pen drive'], targets: ['pemacu'] },
+      { terms: ['water dispenser'], targets: ['penapis air', 'dispenser air'] },
+      { terms: ['projector', 'projektor'], targets: ['projektor'] },
+      { terms: ['aircond', 'air cond', 'aircon'], targets: ['penyaman udara'] },
+      { terms: ['cctv'], targets: ['kamera litar tertutup'] },
+      { terms: ['drone', 'dron'], targets: ['pesawat tanpa pemandu'] },
+      { terms: ['smartphone', 'handphone'], targets: ['telefon pintar', 'telefon bimbit'] },
+      { terms: ['tablet', 'ipad'], targets: ['komputer tablet'] },
+      { terms: ['microwave'], targets: ['ketuhar gelombang mikro'] },
+      { terms: ['fridge', 'peti ais'], targets: ['peti sejuk'] },
+      { terms: ['vacuum', 'vakum'], targets: ['pembersih hampagas'] },
+      { terms: ['printer'], targets: ['pencetak'] },
+      { terms: ['scanner'], targets: ['pengimbas'] },
+      { terms: ['shredder'], targets: ['mesin perincih'] },
+      { terms: ['whiteboard'], targets: ['papan putih'] }
+    ];
+
+    // Data sandaran pratonton jika data_terkini.json belum tersedia (mod luar talian)
+    const SAMPLE_FALLBACK_RECORDS = [
+      { id: '101', code: '010101001', desc: 'DAPUR ELEKTRIK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Dapur memasak elektrik kegunaan pantri atau asrama.' },
+      { id: '102', code: '010101002', desc: 'KETUHAR GELOMBANG MIKRO', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pemanas makanan gelombang mikro.' },
+      { id: '103', code: '010101003', desc: 'KETUHAR ELEKTRIK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pemanas dan pembakar elektrik.' },
+      { id: '104', code: '010101004', desc: 'PENAPIS AIR / DISPENSER AIR', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Mesin penapis dan dispenser air minuman.' },
+      { id: '105', code: '010101005', desc: 'PETI SEJUK', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Peti sejuk penyimpanan bahan makanan atau makmal.' },
+      { id: '106', code: '020101001', desc: 'KOMPUTER RIBA', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Komputer mudah alih lengkap dengan skrin dan bateri.' },
+      { id: '107', code: '020101002', desc: 'KOMPUTER TABLET', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Komputer skrin sentuh mudah alih.' },
+      { id: '108', code: '020102001', desc: 'PENCETAK LASER', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Mesin pencetak dokumen berkelajuan tinggi.' },
+      { id: '109', code: '020102002', desc: 'PENGIMBAS DOKUMEN', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Pengimbas imej dan dokumen digital.' },
+      { id: '110', code: '020103001', desc: 'PROJEKTOR LCD', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERALATAN TAYANGAN', c3: '', detail: 'Projektor paparan visual bilik mesyuarat.' },
+      { id: '111', code: '030101001', desc: 'RADIO DUA HALA', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'ALAT PERHUBUNGAN', c3: '', detail: 'Alat komunikasi radio mudah alih untuk operasi.' },
+      { id: '112', code: '030102001', desc: 'KAMERA LITAR TERTUTUP (CCTV)', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'KESELAMATAN', c3: '', detail: 'Kamera pemantauan keselamatan bangunan.' },
+      { id: '113', code: '030103001', desc: 'PESAWAT TANPA PEMANDU (UAV)', cat: 'ASET_ALIH', c1: 'PERALATAN KOMUNIKASI', c2: 'PEMANTAUAN', c3: '', detail: 'Pesawat kawalan jauh berkamera.' },
+      { id: '114', code: '040101001', desc: 'PENYAMAN UDARA', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'ALAT HAWA DINGIN', c3: '', detail: 'Unit penyaman udara pejabat.' },
+      { id: '115', code: '040102001', desc: 'PEMBERSIH HAMPAGAS', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'PEMBERSIHAN', c3: '', detail: 'Mesin penyedut habuk dan kotoran.' },
+      { id: '116', code: '010201001', desc: 'MESIN PERINCIH KERTAS', cat: 'ASET_ALIH', c1: 'PERALATAN PEJABAT', c2: 'MESIN PEJABAT', c3: '', detail: 'Mesin pemusnah dokumen terperingkat.' },
+      { id: '117', code: '050101001', desc: 'PAPAN PUTIH BERODA', cat: 'ASET_ALIH', c1: 'PERABOT', c2: 'PAPAN TULIS', c3: '', detail: 'Papan tulis putih bermagnet.' },
+      { id: '118', code: '050102001', desc: 'KERUSI PEJABAT BERODA', cat: 'ASET_ALIH', c1: 'PERABOT', c2: 'TEMPAT DUDUK', c3: '', detail: 'Kerusi ergonomik kegunaan pejabat.' },
+      { id: '201', code: 'S01010001', desc: 'PEMACU PEN USB', cat: 'STOK', c1: 'ALAT TULIS & KELENGKAPAN', c2: 'AKSESORI ICT', c3: 'STORAN', detail: 'Peranti storan mudah alih USB.' },
+      { id: '202', code: 'S01010002', desc: 'BATERI / PEK KUASA MUDAH ALIH', cat: 'STOK', c1: 'ALAT TULIS & KELENGKAPAN', c2: 'BEKALAN ELEKTRIK', c3: 'BATERI', detail: 'Bateri dan bekalan kuasa simpanan mudah alih.' }
+    ];
+
+    const PAGE_SIZE = 30;
+    const CLOSE_MATCH_LIMIT = 10;
 
     let allRecords = [];
     let filteredRecords = [];
     let currentCategory = 'ALL';
-    let currentView = 'CARD'; // 'CARD' | 'TABLE'
-    let currentPage = 1;
-    let isSmartMatchActive = false;
-    let smartMatchMeta = { originalQuery: '', mappedKeywords: [], ruleLabel: '' };
-    let metadataInfo = {
-      updated_at: '-',
-      aset_source: '-',
-      stok_source: '-',
-      total: 0
-    };
-    let selectedAiImageBase64 = null;
-    let selectedAiImageMime = 'image/jpeg';
-
-    // 25 Official MOF Sample Records for Fallback / Preview Mode when data_terkini.json is offline
-    const FALLBACK_MOF_RECORDS = [
-      { id: '1001', code: '010101001', desc: 'DAPUR ELEKTRIK', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Peralatan memasak elektrik kegunaan pantri pejabat / asrama / dewan makan.', img: null },
-      { id: '1002', code: '010101002', desc: 'KETUHAR GELOMBANG MIKRO (MICROWAVE OVEN)', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pemanas makanan menggunakan gelombang mikro.', img: null },
-      { id: '1003', code: '010101003', desc: 'KETUHAR ELEKTRIK (ELECTRIC OVEN)', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Ketuhar pembakar / pemanas elektrik berkapasiti tinggi.', img: null },
-      { id: '1004', code: '010101004', desc: 'PERIUK NASI ELEKTRIK (ELECTRIC RICE COOKER)', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Periuk memasak nasi elektrik kegunaan jabatan.', img: null },
-      { id: '1005', code: '010101005', desc: 'CEREK ELEKTRIK (ELECTRIC KETTLE)', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Cerek pemanas air elektrik.', img: null },
-      { id: '1006', code: '010101006', desc: 'PENAPIS AIR / DISPENSER AIR', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'PERALATAN DAPUR', c3: '', detail: 'Mesin penapis dan dispenser air panas/sejuk.', img: null },
-      { id: '1007', code: '020101001', desc: 'KOMPUTER RIBA (LAPTOP / NOTEBOOK)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Komputer mudah alih lengkap dengan unit pemprosesan, skrin dan bateri.', img: null },
-      { id: '1008', code: '020101002', desc: 'KOMPUTER MEJA (DESKTOP PC)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Set komputer meja termasuk CPU, monitor, papan kekunci dan tetikus.', img: null },
-      { id: '1009', code: '020101003', desc: 'KOMPUTER TABLET (TABLET PC)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'KOMPUTER PERIBADI', c3: '', detail: 'Peranti komputer skrin sentuh mudah alih.', img: null },
-      { id: '1010', code: '020102001', desc: 'PENCETAK PELBAGAI FUNGSI (MULTIFUNCTION PRINTER)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Mesin pencetak, pengimbas dan penyalin dokumen.', img: null },
-      { id: '1011', code: '020102002', desc: 'PENGIMBAS DOKUMEN (DOCUMENT SCANNER)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERKAKASAN PENCETAK', c3: '', detail: 'Pengimbas imej dan dokumen berkelajuan tinggi.', img: null },
-      { id: '1012', code: '020103001', desc: 'PROJEKTOR LCD / MULTIMEDIA', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERALATAN TAYANGAN', c3: '', detail: 'Projektor paparan visual untuk bilik mesyuarat dan dewan.', img: null },
-      { id: '1013', code: '020104001', desc: 'PENGHALA RANGKAIAN (NETWORK ROUTER / WIFI)', cat: 'ASET_ALIH', c1: 'PERALATAN ICT', c2: 'PERALATAN RANGKAIAN', c3: '', detail: 'Peranti penghala rangkaian internet berwayar dan tanpa wayar.', img: null },
-      { id: '1014', code: '030101001', desc: 'RADIO DUA HALA (TWO-WAY RADIO)', cat: 'ASET_ALIH', c1: 'PERALATAN PENYIARAN DAN KOMUNIKASI', c2: 'ALAT PERHUBUNGAN', c3: '', detail: 'Alat komunikasi radio mudah alih (walkie-talkie) untuk operasi lapangan.', img: null },
-      { id: '1015', code: '030102001', desc: 'KAMERA LITAR TERTUTUP (CCTV)', cat: 'ASET_ALIH', c1: 'PERALATAN PENYIARAN DAN KOMUNIKASI', c2: 'PERALATAN KESELAMATAN', c3: '', detail: 'Sistem kamera pemantauan keselamatan premis.', img: null },
-      { id: '1016', code: '030103001', desc: 'PESAWAT TANPA PEMANDU (UAV / DRONE)', cat: 'ASET_ALIH', c1: 'PERALATAN PENYIARAN DAN KOMUNIKASI', c2: 'PERALATAN FOTOGRAFI', c3: '', detail: 'Pesawat kawalan jauh tanpa pemandu berkamera untuk pemetaan dan pemantauan.', img: null },
-      { id: '1017', code: '040101001', desc: 'PENYAMAN UDARA (AIR CONDITIONER)', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'ALAT HAWA DINGIN', c3: '', detail: 'Unit penyaman udara jenis split / mudah alih.', img: null },
-      { id: '1018', code: '040102001', desc: 'PEMBERSIH VAKUM (VACUUM CLEANER)', cat: 'ASET_ALIH', c1: 'JENTERA DAN KELENGKAPAN', c2: 'PERALATAN PEMBERSIHAN', c3: '', detail: 'Mesin penyedut hampagas kegunaan pejabat.', img: null },
-      { id: '1019', code: '050101001', desc: 'KABINET BESI BERLACI (STEEL FILING CABINET)', cat: 'ASET_ALIH', c1: 'PERABOT DAN KELENGKAPAN', c2: 'KABINET DAN ALMARI', c3: '', detail: 'Kabinet besi berkunci untuk penyimpanan fail rasmi.', img: null },
-      { id: '1020', code: '050102001', desc: 'PAPAN PUTIH BERODA (MOBILE WHITEBOARD)', cat: 'ASET_ALIH', c1: 'PERABOT DAN KELENGKAPAN', c2: 'PAPAN TULIS', c3: '', detail: 'Papan tulis putih bermagnet dengan kaki beroda.', img: null },
-      { id: '1021', code: '010201001', desc: 'MESIN PERINCIH KERTAS (PAPER SHREDDER)', cat: 'ASET_ALIH', c1: 'PERALATAN DAN KELENGKAPAN PEJABAT', c2: 'MESIN PEJABAT', c3: '', detail: 'Mesin pemusnah dokumen terperingkat.', img: null },
-      { id: '2001', code: 'S01010001', desc: 'PEMACU PEN USB (USB FLASH DRIVE)', cat: 'STOK', c1: 'ALAT TULIS DAN KELENGKAPAN PEJABAT', c2: 'AKSESORI KOMPUTER', c3: 'STORAN DATA', detail: 'Peranti storan mudah alih USB (guna habis / nilai rendah).', img: null },
-      { id: '2002', code: 'S01010002', desc: 'BATERI / PEK KUASA MUDAH ALIH (PORTABLE BATTERY PACK)', cat: 'STOK', c1: 'ALAT TULIS DAN KELENGKAPAN PEJABAT', c2: 'BEKALAN ELEKTRIK', c3: 'BATERI', detail: 'Bekalan kuasa simpanan mudah alih dan bateri.', img: null },
-      { id: '2003', code: 'S01020001', desc: 'KERTAS A4 PUTIH 80GSM', cat: 'STOK', c1: 'ALAT TULIS DAN KELENGKAPAN PEJABAT', c2: 'KERTAS', c3: 'KERTAS PENCETAK', detail: 'Kertas fotostat dan pencetak bersaiz A4.', img: null },
-      { id: '2004', code: 'S01030001', desc: 'KATRIJ TONER PENCETAK (PRINTER TONER CARTRIDGE)', cat: 'STOK', c1: 'ALAT TULIS DAN KELENGKAPAN PEJABAT', c2: 'BAHAN PENCETAK', c3: 'TONER & DAKWAT', detail: 'Katrij dakwat dan toner gantian mesin pencetak.', img: null }
-    ];
-
-    // Comprehensive Modern/Commercial -> Official 1PP MOF Mapping Dictionary (>85 terms)
-    const SMART_THESAURUS = [
-      { triggers: ['induction cooker', 'induction', 'dapur aruhan', 'hot plate', 'hotplate', 'electric stove', 'dapur elektrik', 'portable stove', 'ceramic cooker'], keywords: ['dapur elektrik', 'dapur', 'pemanas', 'periuk'], label: 'Peralatan Memasak Elektrik' },
-      { triggers: ['air fryer', 'airfryer', 'penggoreng udara', 'microwave', 'oven', 'ketuhar', 'toaster', 'pembakar roti', 'steamer', 'pengukus'], keywords: ['ketuhar', 'pemanas', 'dapur elektrik', 'periuk'], label: 'Peralatan Pemanas / Ketuhar' },
-      { triggers: ['rice cooker', 'periuk nasi', 'kettle', 'cerek', 'boiler', 'thermo pot', 'termos elektrik'], keywords: ['periuk nasi', 'cerek', 'pemanas air', 'dapur elektrik'], label: 'Peralatan Pemanas Air & Nasi' },
-      { triggers: ['water dispenser', 'coway', 'cuckoo', 'penapis air', 'water filter', 'water purifier', 'cooler air'], keywords: ['penapis air', 'dispenser', 'pemanas air'], label: 'Sistem Penapis & Dispenser Air' },
-      { triggers: ['fridge', 'peti sejuk', 'peti ais', 'refrigerator', 'freezer', 'chiller', 'peti pembeku'], keywords: ['peti sejuk', 'penyejuk', 'pembeku'], label: 'Peralatan Penyejukbekuan' },
-      { triggers: ['laptop', 'notebook', 'macbook', 'ultrabook', 'chromebook', 'komputer riba'], keywords: ['komputer riba', 'komputer'], label: 'Komputer Mudah Alih' },
-      { triggers: ['pc', 'desktop', 'cpu', 'workstation', 'imac', 'all in one', 'komputer meja'], keywords: ['komputer', 'komputer meja', 'pemprosesan'], label: 'Komputer Meja' },
-      { triggers: ['monitor', 'skrin', 'screen', 'display', 'paparan', 'led monitor'], keywords: ['monitor', 'paparan', 'skrin', 'komputer'], label: 'Paparan Visual Komputer' },
-      { triggers: ['tablet', 'ipad', 'galaxy tab', 'surface'], keywords: ['tablet', 'komputer tablet', 'komputer'], label: 'Peranti Tablet Mudah Alih' },
-      { triggers: ['printer', 'pencetak', 'mesin cetak', 'laserjet', 'inkjet', 'plotter'], keywords: ['pencetak', 'mesin cetak'], label: 'Perkakasan Pencetak' },
-      { triggers: ['scanner', 'pengimbas', 'barcode scanner'], keywords: ['pengimbas', 'pencetak'], label: 'Perkakasan Pengimbas' },
-      { triggers: ['photostat', 'fotostat', 'copier', 'mesin penyalin', 'xerox', 'ricoh'], keywords: ['penyalin', 'pencetak', 'fotostat'], label: 'Mesin Penyalin Dokumen' },
-      { triggers: ['pendrive', 'thumbdrive', 'thumb drive', 'flash drive', 'usb drive', 'pemacu pen'], keywords: ['pemacu', 'storan', 'usb'], label: 'Storan Mudah Alih USB' },
-      { triggers: ['hard disk', 'hdd', 'ssd', 'external drive', 'cakera keras', 'nas', 'memory card', 'sd card'], keywords: ['cakera', 'storan', 'pemacu'], label: 'Peranti Storan Data' },
-      { triggers: ['powerbank', 'power bank', 'ups', 'charger', 'pengecas', 'adapter', 'bekalan kuasa'], keywords: ['bateri', 'bekalan kuasa', 'pengecas'], label: 'Bekalan Kuasa & Bateri' },
-      { triggers: ['walkie talkie', 'walkie-talkie', 'handy', 'two way radio', 'radio dua hala', 'intercom', 'interkom'], keywords: ['radio', 'perhubungan', 'komunikasi'], label: 'Alat Perhubungan Radio' },
-      { triggers: ['aircond', 'airconds', 'aircon', 'air cond', 'air conditioner', 'penyaman udara', 'hawa dingin', 'pendingin hawa'], keywords: ['penyaman udara', 'hawa dingin'], label: 'Sistem Penyaman Udara' },
-      { triggers: ['fan', 'kipas', 'stand fan', 'wall fan', 'ceiling fan', 'exhaust fan', 'air cooler'], keywords: ['kipas', 'pengudaraan'], label: 'Peralatan Pengudaraan' },
-      { triggers: ['projector', 'projektor', 'lcd projector', 'layar putih', 'projector screen'], keywords: ['projektor', 'tayangan'], label: 'Peralatan Tayangan Visual' },
-      { triggers: ['smartboard', 'smart board', 'interactive board', 'papan pintar', 'whiteboard', 'papan putih', 'flipchart', 'flip chart'], keywords: ['papan putih', 'papan tulis', 'paparan'], label: 'Papan Tulis & Paparan Interaktif' },
-      { triggers: ['cctv', 'webcam', 'dslr', 'mirrorless', 'kamera', 'camera', 'camcorder', 'gopro', 'dashcam'], keywords: ['kamera', 'rakaman', 'keselamatan'], label: 'Peralatan Kamera & Rakaman' },
-      { triggers: ['drone', 'dron', 'uav', 'quadcopter', 'pesawat tanpa pemandu'], keywords: ['pesawat tanpa pemandu', 'uav', 'kamera'], label: 'Pesawat Tanpa Pemandu (UAV)' },
-      { triggers: ['shredder', 'paper shredder', 'mesin perincih', 'perincih kertas', 'pemusnah dokumen'], keywords: ['perincih', 'mesin perincih', 'pemusnah'], label: 'Mesin Perincih Dokumen' },
-      { triggers: ['laminator', 'laminating', 'mesin pelamina', 'laminasi'], keywords: ['pelamina', 'laminasi', 'mesin pejabat'], label: 'Mesin Pelamina' },
-      { triggers: ['binding', 'comb binding', 'mesin penjilid', 'jilid'], keywords: ['penjilid', 'jilid', 'mesin pejabat'], label: 'Mesin Penjilid Dokumen' },
-      { triggers: ['vacuum', 'vakum', 'pembersih vakum', 'robot vacuum', 'penyapu elektrik'], keywords: ['vakum', 'pembersih vakum', 'pembersihan'], label: 'Peralatan Pembersihan' },
-      { triggers: ['router', 'wifi', 'wi-fi', 'modem', 'switch', 'access point', 'hub', 'penghala'], keywords: ['penghala', 'rangkaian', 'suis'], label: 'Perkakasan Rangkaian ICT' },
-      { triggers: ['extension', 'extension wire', 'plug', 'socket', 'soket', 'kabel', 'hdmi', 'vga', 'lan cable'], keywords: ['soket', 'kabel', 'penyambung', 'wayar'], label: 'Kabel & Penyambung Elektrik' },
-      { triggers: ['toner', 'cartridge', 'katrij', 'ink', 'dakwat', 'ribbon'], keywords: ['katrij', 'dakwat', 'toner'], label: 'Bahan Guna Habis Pencetak' },
-      { triggers: ['chair', 'kerusi', 'banquet chair', 'office chair', 'sofa', 'settee', 'bangku'], keywords: ['kerusi', 'sofa', 'bangku'], label: 'Perabot Tempat Duduk' },
-      { triggers: ['table', 'desk', 'meja', 'meja mesyuarat', 'meja komputer', 'kaunter'], keywords: ['meja', 'kaunter'], label: 'Perabot Meja' },
-      { triggers: ['cabinet', 'kabinet', 'almari', 'locker', 'loker', 'rak', 'shelf', 'pedestal'], keywords: ['kabinet', 'almari', 'rak'], label: 'Perabot Penyimpanan' },
-      { triggers: ['tv', 'television', 'televisyen', 'smart tv', 'led tv'], keywords: ['televisyen', 'paparan'], label: 'Peralatan Audio Visual' },
-      { triggers: ['speaker', 'pembesar suara', 'microphone', 'mikrofon', 'mic', 'amplifier', 'pa system'], keywords: ['pembesar suara', 'mikrofon', 'audio'], label: 'Sistem Siaraya & Audio' },
-      { triggers: ['drill', 'gerudi', 'grinder', 'saw', 'gergaji', 'hammer', 'tukul', 'spanner', 'screwdriver', 'pliers'], keywords: ['gerudi', 'gergaji', 'tukul', 'alat pertukangan'], label: 'Alat Pertukangan & Bengkel' },
-      { triggers: ['ladder', 'tangga', 'trolley', 'troli', 'wheelbarrow', 'kereta sorong'], keywords: ['tangga', 'troli', 'pengangkut'], label: 'Kelengkapan Logistik & Tangga' }
-    ];
-
-    const SYNONYM_GROUPS = SMART_THESAURUS.map((entry) =>
-      Array.from(new Set([...entry.triggers, ...entry.keywords]))
-    );
+    let visibleCount = PAGE_SIZE;
+    let isCloseMatchMode = false;
+    let activeCloseMatchTargets = [];
 
     // =========================================================================
-    // 2. INDEXEDDB CACHE MANAGEMENT
+    // 2. INISIALISASI & MUAT TURUN DATA DARI data_terkini.json
     // =========================================================================
-    function openArasDB() {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
-        req.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) {
-            db.createObjectStore(STORE_NAME);
-          }
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function saveToCache(payload) {
-      try {
-        const db = await openArasDB();
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).put(payload, 'latest_dataset');
-      } catch (err) {
-        console.warn('Cache simpanan gagal:', err);
-      }
-    }
-
-    async function loadFromCache() {
-      try {
-        const db = await openArasDB();
-        return new Promise((resolve) => {
-          const tx = db.transaction(STORE_NAME, 'readonly');
-          const req = tx.objectStore(STORE_NAME).get('latest_dataset');
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => resolve(null);
-        });
-      } catch {
-        return null;
-      }
-    }
-
-    // =========================================================================
-    // 3. AUTOMATIC DATA SYNC FROM data_terkini.json (WITH FALLBACK)
-    // =========================================================================
-    async function initAppData() {
-      const cached = await loadFromCache();
-      if (cached && Array.isArray(cached.records) && cached.records.length > 0) {
-        applyDataset(cached, true);
-      }
-      await fetchLatestJsonFromServer(!cached);
-    }
-
-    async function fetchLatestJsonFromServer(showLoader = false) {
+    async function loadTreasuryData() {
+      const statusText = document.getElementById('headerStatusText');
       const syncDot = document.getElementById('syncDot');
-      const syncTimestamp = document.getElementById('syncTimestamp');
-      const refreshBtnIcon = document.querySelector('#btnRefreshData svg');
-
-      if (showLoader) {
-        document.getElementById('loadingState').classList.remove('hidden');
-      }
-      if (refreshBtnIcon) refreshBtnIcon.classList.add('animate-spin');
-      syncDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0';
 
       try {
-        const response = await fetch(`./data_terkini.json?t=${Date.now()}`, {
-          cache: 'no-store'
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        const res = await fetch(`./data_terkini.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+
+        if (!json || !Array.isArray(json.records) || json.records.length === 0) {
+          throw new Error('Fail JSON tidak mempunyai rekod');
         }
-        const data = await response.json();
-        if (data && Array.isArray(data.records) && data.records.length > 0) {
-          await saveToCache(data);
-          applyDataset(data, false);
-        } else {
-          throw new Error('Struktur JSON kosong');
-        }
+
+        allRecords = json.records;
+        const updatedAt = json.updated_at || 'Terkini';
+        statusText.textContent = `Dikemaskini: ${updatedAt} | Jumlah Rekod: ${allRecords.length.toLocaleString()}`;
+        syncDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shrink-0';
       } catch (err) {
-        console.warn('Menggunakan sandaran data MOF terbina dalam:', err);
-        if (allRecords.length > 0) {
-          syncDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
-          syncTimestamp.textContent = `Cache Offline • ${metadataInfo.updated_at}`;
-        } else {
-          // Load built-in 25 MOF sample records so app works seamlessly in preview/offline mode
-          applyDataset({
-            updated_at: 'Mod Pratonton / Sandaran MOF',
-            aset_source: 'Data Sandaran 1PP (21 rekod)',
-            stok_source: 'Data Sandaran 1PP (4 rekod)',
-            total: FALLBACK_MOF_RECORDS.length,
-            records: FALLBACK_MOF_RECORDS
-          }, true);
-          syncTimestamp.textContent = 'Mod Sandaran (25 Contoh Rasmi 1PP)';
-        }
+        allRecords = SAMPLE_FALLBACK_RECORDS;
+        statusText.textContent = `Mod Pratonton | Jumlah Rekod: ${allRecords.length.toLocaleString()}`;
+        syncDot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
       } finally {
-        if (refreshBtnIcon) refreshBtnIcon.classList.remove('animate-spin');
+        document.getElementById('loadingState').classList.add('hidden');
+        updateAiKeyIndicator();
+        runSearchAndFilter();
       }
-    }
-
-    async function forceSyncData() {
-      showToast('Menyegerak data terkini daripada pelayan...');
-      await fetchLatestJsonFromServer(allRecords.length === 0);
-      if (allRecords.length > 0) {
-        showToast(`Selesai! ${allRecords.length.toLocaleString()} kod rasmi terkini sedia digunakan.`);
-      }
-    }
-
-    function applyDataset(data, isFromCache) {
-      allRecords = data.records || [];
-      metadataInfo = {
-        updated_at: data.updated_at || 'Terkini',
-        aset_source: data.aset_source || 'dump_asset.cfm',
-        stok_source: data.stok_source || 'dump_stock.cfm',
-        total: allRecords.length
-      };
-
-      const syncDot = document.getElementById('syncDot');
-      syncDot.className = isFromCache
-        ? 'w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0'
-        : 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0';
-
-      document.getElementById('syncRecordCount').textContent = `${allRecords.length.toLocaleString()} Kod Rasmi Aktif`;
-      document.getElementById('syncTimestamp').textContent = `Kemaskini: ${metadataInfo.updated_at}`;
-
-      document.getElementById('modalUpdatedAt').textContent = metadataInfo.updated_at;
-      document.getElementById('modalAsetSource').textContent = metadataInfo.aset_source;
-      document.getElementById('modalStokSource').textContent = metadataInfo.stok_source;
-      document.getElementById('modalTotalRecords').textContent = `${allRecords.length.toLocaleString()} rekod`;
-
-      document.getElementById('loadingState').classList.add('hidden');
-      applyFilters();
     }
 
     // =========================================================================
-    // 4. ARAS PINTAR: SMART SIMILARITY MATCHING & SYNONYM EXPANSION
+    // 3. ENJIN CARIAN & PADANAN HAMPIR
     // =========================================================================
-    function findSmartThesaurusMatch(rawQuery) {
-      const q = rawQuery.toLowerCase().trim();
-      if (!q) return null;
-
-      // Exact or substring match against triggers
-      for (const entry of SMART_THESAURUS) {
-        if (entry.triggers.some((t) => q === t || q.includes(t) || (q.length >= 4 && t.includes(q)))) {
-          return entry;
-        }
-      }
-
-      // Word-level overlap match
-      const words = q.split(/\s+/).filter((w) => w.length >= 3);
-      for (const word of words) {
-        for (const entry of SMART_THESAURUS) {
-          if (entry.triggers.some((t) => t === word || t.includes(word))) {
-            return entry;
-          }
-        }
-      }
-      return null;
-    }
-
-    function expandQueryWithSynonyms(rawQuery) {
-      const cleaned = rawQuery.toLowerCase().trim();
-      if (!cleaned) return [];
-
-      const tokens = cleaned.split(/\s+/).filter(Boolean);
-      return tokens.map((token) => {
-        const variants = new Set([token]);
-        for (const group of SYNONYM_GROUPS) {
-          if (group.some((word) => word === token || (token.length >= 4 && word.includes(token)))) {
-            group.forEach((w) => variants.add(w));
-          }
-        }
-        return Array.from(variants);
-      });
-    }
-
-    let searchDebounceTimer = null;
+    let debounceTimer = null;
     document.getElementById('searchInput').addEventListener('input', () => {
-      clearTimeout(searchDebounceTimer);
-      searchDebounceTimer = setTimeout(() => {
-        applyFilters();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        document.getElementById('aiResponsePanel').classList.add('hidden');
+        runSearchAndFilter();
       }, 150);
     });
-
-    function quickSearch(term) {
-      const input = document.getElementById('searchInput');
-      input.value = term;
-      applyFilters();
-    }
-
-    function triggerSmartMatchMode() {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) {
-        openAiModal('TEXT');
-        return;
-      }
-      const thesaurusMatch = findSmartThesaurusMatch(q);
-      if (thesaurusMatch) {
-        applyFilters(true, true);
-        showToast(`ARAS Pintar memaparkan padanan hampir untuk "${q}".`);
-      } else {
-        openAiModal('TEXT', q);
-      }
-    }
 
     function clearSearch() {
       const input = document.getElementById('searchInput');
       input.value = '';
       currentCategory = 'ALL';
-      isSmartMatchActive = false;
-      document.getElementById('subCatSelect').value = '';
-      updateCategoryPillStyles();
-      applyFilters();
+      document.getElementById('aiResponsePanel').classList.add('hidden');
+      updateCategoryButtons();
+      runSearchAndFilter();
     }
 
     function setCategoryFilter(cat) {
       currentCategory = cat;
-      updateCategoryPillStyles();
-      applyFilters(false);
+      updateCategoryButtons();
+      runSearchAndFilter();
     }
 
-    function updateCategoryPillStyles() {
+    function updateCategoryButtons() {
       document.querySelectorAll('.cat-pill').forEach((btn) => {
-        const isTarget = btn.dataset.cat === currentCategory;
-        if (isTarget) {
-          btn.className = 'cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0a192f] text-white shadow-xs transition cursor-pointer';
-        } else {
-          btn.className = 'cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
-        }
+        const active = btn.dataset.cat === currentCategory;
+        btn.className = active
+          ? 'cat-pill active px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-xs transition cursor-pointer'
+          : 'cat-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer';
       });
     }
 
-    function applyFilters(refreshSubCategories = true, forceSmartSimilarity = false) {
-      const rawQuery = document.getElementById('searchInput').value.trim();
-      const clearBtn = document.getElementById('clearSearchBtn');
-      const smartBanner = document.getElementById('smartMatchBanner');
-
-      if (rawQuery.length > 0) {
-        clearBtn.classList.remove('hidden');
-      } else {
-        clearBtn.classList.add('hidden');
+    function findCloseMatchMapping(queryLower) {
+      for (const entry of CLOSE_MATCH_DICTIONARY) {
+        if (entry.terms.some((t) => queryLower === t || queryLower.includes(t))) {
+          return entry.targets;
+        }
       }
+      return null;
+    }
 
-      isSmartMatchActive = false;
-      smartMatchMeta = { originalQuery: rawQuery, mappedKeywords: [], ruleLabel: '' };
+    function runSearchAndFilter() {
+      const rawQuery = document.getElementById('searchInput').value.trim();
+      const queryLower = rawQuery.toLowerCase();
 
-      const rawLower = rawQuery.toLowerCase();
-      let queryMatched = [];
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', rawQuery.length === 0);
+      document.getElementById('subtleAskAiBtn').classList.toggle('hidden', rawQuery.length === 0);
 
-      if (rawQuery === '') {
-        queryMatched = allRecords;
+      isCloseMatchMode = false;
+      activeCloseMatchTargets = [];
+      let matchedPool = [];
+
+      if (!rawQuery) {
+        matchedPool = allRecords;
       } else {
-        // Step 1A: Direct literal match (code, desc, hierarchy, detail)
+        // Langkah 1: Carian terus (exact/substring) dalam kod, perihal, dan hierarki
         const directMatches = allRecords.filter((rec) => {
-          const hay = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
-          return hay.includes(rawLower);
+          const searchable = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
+          return searchable.includes(queryLower);
         });
 
-        // Step 1B: Smart Thesaurus Similarity Fallback when direct match is 0 (or forced)
-        const thesaurusEntry = findSmartThesaurusMatch(rawQuery);
-        if ((directMatches.length === 0 || forceSmartSimilarity) && thesaurusEntry) {
-          const kws = thesaurusEntry.keywords;
-          const smartMatches = allRecords.filter((rec) => {
-            const hay = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
-            return kws.some((kw) => hay.includes(kw.toLowerCase()));
-          });
-
-          if (smartMatches.length > 0) {
-            queryMatched = smartMatches;
-            isSmartMatchActive = true;
-            smartMatchMeta = {
-              originalQuery: rawQuery,
-              mappedKeywords: kws,
-              ruleLabel: thesaurusEntry.label
-            };
-          } else {
-            queryMatched = directMatches;
-          }
-        } else if (directMatches.length === 0) {
-          // Step 1C: Token-level synonym expansion fallback
-          const tokenGroups = expandQueryWithSynonyms(rawQuery);
-          const expandedMatches = allRecords.filter((rec) => {
-            const hay = `${rec.code} ${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''} ${rec.c3 || ''} ${rec.detail || ''}`.toLowerCase();
-            return tokenGroups.every((variants) => variants.some((v) => hay.includes(v)));
-          });
-
-          if (expandedMatches.length > 0) {
-            queryMatched = expandedMatches;
-            isSmartMatchActive = true;
-            const flatVariants = Array.from(new Set(tokenGroups.flat())).filter((v) => v !== rawLower).slice(0, 5);
-            smartMatchMeta = {
-              originalQuery: rawQuery,
-              mappedKeywords: flatVariants,
-              ruleLabel: 'Padanan Sinonim Istilah 1PP'
-            };
-          } else {
-            queryMatched = [];
-          }
+        if (directMatches.length > 0) {
+          matchedPool = directMatches;
         } else {
-          queryMatched = directMatches;
+          // Langkah 2: Semak kamus pemetaan ketat ("Padanan Hampir") jika carian terus = 0
+          const mappedTargets = findCloseMatchMapping(queryLower);
+          if (mappedTargets && mappedTargets.length > 0) {
+            const closeMatches = allRecords.filter((rec) => {
+              const titleAndHierarchy = `${rec.desc} ${rec.c1 || ''} ${rec.c2 || ''}`.toLowerCase();
+              return mappedTargets.some((target) => titleAndHierarchy.includes(target.toLowerCase()));
+            });
+
+            // Susun keutamaan supaya yang mengandungi frasa sasaran pada nama item berada di atas sekali
+            closeMatches.sort((a, b) => {
+              const aInDesc = mappedTargets.some((t) => a.desc.toLowerCase().includes(t.toLowerCase())) ? 0 : 1;
+              const bInDesc = mappedTargets.some((t) => b.desc.toLowerCase().includes(t.toLowerCase())) ? 0 : 1;
+              return aInDesc - bInDesc;
+            });
+
+            if (closeMatches.length > 0) {
+              isCloseMatchMode = true;
+              activeCloseMatchTargets = mappedTargets;
+              matchedPool = closeMatches.slice(0, CLOSE_MATCH_LIMIT);
+            }
+          }
         }
       }
 
-      // Render Smart Similarity Banner if active
-      if (isSmartMatchActive && queryMatched.length > 0) {
-        smartBanner.classList.remove('hidden');
-        document.getElementById('smartMatchSourceLabel').textContent = `(${smartMatchMeta.ruleLabel})`;
-        const topMatchedNames = Array.from(new Set(queryMatched.slice(0, 3).map((r) => r.desc))).join(', ');
-        document.getElementById('smartMatchExplanation').innerHTML =
-          `Tiada rekod tepat untuk <strong>"${escapeHtml(smartMatchMeta.originalQuery)}"</strong> dalam senarai MOF. <strong>ARAS Pintar</strong> memaparkan <strong>${queryMatched.length}</strong> padanan paling hampir termasuk: <span class="text-amber-300 font-bold">${escapeHtml(topMatchedNames)}</span>.`;
-
-        document.getElementById('smartMatchKeywordChips').innerHTML =
-          `<span class="text-[11px] text-slate-300 mr-1">Kata kunci dipadankan:</span>` +
-          smartMatchMeta.mappedKeywords.map((kw) =>
-            `<button onclick="quickSearch('${escapeHtml(kw)}')" class="px-2.5 py-0.5 rounded-lg bg-white/10 hover:bg-amber-400 hover:text-slate-950 text-amber-200 text-[11px] font-bold border border-white/15 transition cursor-pointer">${escapeHtml(kw)}</button>`
-          ).join('');
+      // Papar atau sembunyi banner "Padanan Hampir"
+      const closeBanner = document.getElementById('closeMatchBanner');
+      if (isCloseMatchMode && matchedPool.length > 0) {
+        const targetBadges = activeCloseMatchTargets
+          .map((t) => `<strong class="text-blue-900 underline decoration-blue-400">${escapeHtml(t.toUpperCase())}</strong>`)
+          .join(' / ');
+        document.getElementById('closeMatchDescription').innerHTML =
+          `Tiada rekod tepat untuk <strong>"${escapeHtml(rawQuery)}"</strong>. Memaparkan sehingga ${CLOSE_MATCH_LIMIT} rekod rasmi paling hampir di bawah istilah ${targetBadges}.`;
+        closeBanner.classList.remove('hidden');
       } else {
-        smartBanner.classList.add('hidden');
+        closeBanner.classList.add('hidden');
       }
 
-      // Step 2: Update Category Counts & Overlap Banner
+      // Kemas kini bilangan pada setiap pil kategori
       const counts = {
-        ALL: queryMatched.length,
+        ALL: matchedPool.length,
         ASET_ALIH: 0,
-        STOK: 0,
         ASET_TAK_ALIH: 0,
-        ASET_TAK_KETARA: 0
+        ASET_TAK_KETARA: 0,
+        STOK: 0
       };
-      for (const r of queryMatched) {
-        if (counts[r.cat] !== undefined) counts[r.cat]++;
+      for (const item of matchedPool) {
+        if (counts[item.cat] !== undefined) counts[item.cat]++;
       }
-
       for (const key of Object.keys(counts)) {
         const el = document.getElementById(`count-${key}`);
         if (el) el.textContent = counts[key].toLocaleString();
       }
 
-      const overlapBanner = document.getElementById('overlapBanner');
-      if (rawQuery.length >= 2 && counts.ASET_ALIH > 0 && counts.STOK > 0) {
-        overlapBanner.classList.remove('hidden');
-        document.getElementById('overlapStatsBadge').textContent =
-          `${counts.ASET_ALIH} Aset Alih • ${counts.STOK} Stok`;
-      } else {
-        overlapBanner.classList.add('hidden');
-      }
+      // Tapis mengikut kategori yang dipilih
+      filteredRecords = currentCategory === 'ALL'
+        ? matchedPool
+        : matchedPool.filter((item) => item.cat === currentCategory);
 
-      // Step 3: Filter by Category Pill
-      let catFiltered = currentCategory === 'ALL'
-        ? queryMatched
-        : queryMatched.filter((r) => r.cat === currentCategory);
-
-      // Step 4: Populate Sub-Category Dropdown dynamically
-      if (refreshSubCategories) {
-        const subCatSelect = document.getElementById('subCatSelect');
-        const prevVal = subCatSelect.value;
-        const subMap = new Map();
-        for (const r of catFiltered) {
-          if (r.c1) subMap.set(r.c1, (subMap.get(r.c1) || 0) + 1);
-        }
-        const sortedSubs = Array.from(subMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-        subCatSelect.innerHTML = `<option value="">Semua Sub-Kategori / Kelas (${sortedSubs.length})</option>` +
-          sortedSubs.map(([name, cnt]) => `<option value="${escapeHtml(name)}">${escapeHtml(name)} (${cnt})</option>`).join('');
-        if (subMap.has(prevVal)) {
-          subCatSelect.value = prevVal;
-        }
-      }
-
-      const activeSub = document.getElementById('subCatSelect').value;
-      if (activeSub) {
-        catFiltered = catFiltered.filter((r) => r.c1 === activeSub);
-      }
-
-      filteredRecords = catFiltered;
-      currentPage = 1;
-      renderResults();
+      visibleCount = PAGE_SIZE;
+      renderResults(rawQuery);
     }
 
-    // =========================================================================
-    // 5. RENDERING (CARDS, FULL TABLE & PAGINATION)
-    // =========================================================================
-    function switchView(mode) {
-      currentView = mode;
-      const btnCard = document.getElementById('btnViewCard');
-      const btnTable = document.getElementById('btnViewTable');
-
-      if (mode === 'CARD') {
-        btnCard.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
-        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
-      } else {
-        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
-        btnCard.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
-      }
-      renderResults();
+    function loadMoreResults() {
+      visibleCount += PAGE_SIZE;
+      renderResults(document.getElementById('searchInput').value.trim());
     }
 
-    function changePage(delta) {
-      const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
-      currentPage = Math.min(totalPages, Math.max(1, currentPage + delta));
-      renderResults();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function getCategoryMeta(cat) {
+    function getCategoryStyle(cat) {
       switch (cat) {
         case 'ASET_ALIH':
-          return { label: 'Aset Alih', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200' };
-        case 'STOK':
-          return { label: 'Stok', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+          return { label: 'Aset Alih', classes: 'bg-blue-50 text-blue-700 border-blue-200' };
         case 'ASET_TAK_ALIH':
-          return { label: 'Aset Tak Alih', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200' };
+          return { label: 'Aset Tak Alih', classes: 'bg-purple-50 text-purple-700 border-purple-200' };
         case 'ASET_TAK_KETARA':
-          return { label: 'Aset Tak Ketara', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' };
+          return { label: 'Aset Tak Ketara', classes: 'bg-rose-50 text-rose-700 border-rose-200' };
+        case 'STOK':
+          return { label: 'Stok', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
         default:
-          return { label: cat, badgeClass: 'bg-slate-100 text-slate-700 border-slate-200' };
+          return { label: cat || 'Umum', classes: 'bg-slate-100 text-slate-700 border-slate-200' };
       }
     }
 
-    function renderResults() {
-      const total = filteredRecords.length;
-      const cardContainer = document.getElementById('cardGridContainer');
-      const tableContainer = document.getElementById('tableViewContainer');
+    function renderResults(rawQuery) {
+      const grid = document.getElementById('resultsGrid');
       const emptyState = document.getElementById('emptyState');
-      const paginationBar = document.getElementById('paginationBar');
+      const loadMoreWrapper = document.getElementById('loadMoreWrapper');
+      const total = filteredRecords.length;
 
-      document.getElementById('totalFilteredCount').textContent = total.toLocaleString();
+      document.getElementById('totalMatchedCount').textContent = total.toLocaleString();
 
       if (total === 0) {
-        cardContainer.innerHTML = '';
-        document.getElementById('tableBody').innerHTML = '';
-        cardContainer.classList.add('hidden');
-        tableContainer.classList.add('hidden');
-        paginationBar.classList.add('hidden');
-        document.getElementById('showingRange').textContent = '0';
-        if (allRecords.length > 0) {
-          document.getElementById('emptyQueryText').textContent = document.getElementById('searchInput').value.trim();
-          emptyState.classList.remove('hidden');
-        }
+        grid.innerHTML = '';
+        grid.classList.add('hidden');
+        loadMoreWrapper.classList.add('hidden');
+        document.getElementById('showingCount').textContent = '0';
+        document.getElementById('pageIndicator').textContent = '';
+        document.getElementById('emptyQueryLabel').textContent = rawQuery;
+        emptyState.classList.remove('hidden');
+        lucide.createIcons();
         return;
       }
 
       emptyState.classList.add('hidden');
-      const totalPages = Math.ceil(total / PAGE_SIZE);
-      const startIdx = (currentPage - 1) * PAGE_SIZE;
-      const endIdx = Math.min(startIdx + PAGE_SIZE, total);
-      const pageSlice = filteredRecords.slice(startIdx, endIdx);
+      grid.classList.remove('hidden');
 
-      document.getElementById('showingRange').textContent = `${(startIdx + 1).toLocaleString()}–${endIdx.toLocaleString()}`;
-      document.getElementById('currentPageLabel').textContent = currentPage.toLocaleString();
-      document.getElementById('totalPagesLabel').textContent = totalPages.toLocaleString();
-      document.getElementById('btnPrevPage').disabled = currentPage <= 1;
-      document.getElementById('btnNextPage').disabled = currentPage >= totalPages;
-      paginationBar.classList.toggle('hidden', totalPages <= 1);
+      const slice = filteredRecords.slice(0, visibleCount);
+      document.getElementById('showingCount').textContent = slice.length.toLocaleString();
+      document.getElementById('pageIndicator').textContent =
+        total > slice.length ? `Menunjukkan ${slice.length} teratas` : 'Semua rekod dipaparkan';
 
-      if (currentView === 'CARD') {
-        tableContainer.classList.add('hidden');
-        cardContainer.classList.remove('hidden');
+      grid.innerHTML = slice.map((rec) => {
+        const catMeta = getCategoryStyle(rec.cat);
+        const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' > ');
 
-        cardContainer.innerHTML = pageSlice.map((rec, idx) => {
-          const meta = getCategoryMeta(rec.cat);
-          const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ');
-          const globalIndex = startIdx + idx;
-          return `
-            <article class="bg-white rounded-2xl border ${isSmartMatchActive ? 'border-amber-300/90 ring-1 ring-amber-200/60' : 'border-slate-200/90'} shadow-xs hover:shadow-md hover:border-blue-300 transition p-4 flex flex-col justify-between gap-3.5">
-              <div class="space-y-2.5">
-                <div class="flex flex-wrap items-center justify-between gap-1.5">
-                  <span class="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                    ${escapeHtml(rec.code)}
-                  </span>
-                  <div class="flex items-center gap-1.5">
-                    ${isSmartMatchActive ? `
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
-                        ✨ ARAS Pintar
-                      </span>
-                    ` : ''}
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${meta.badgeClass}">
-                      ${meta.label}
+        return `
+          <article class="bg-white rounded-2xl border ${isCloseMatchMode ? 'border-blue-200' : 'border-slate-200/90'} p-4 shadow-2xs hover:shadow-md hover:border-blue-300 transition flex flex-col justify-between gap-3.5">
+            <div class="space-y-2.5">
+              <!-- Baris Atas: Kod & Lencana -->
+              <div class="flex flex-wrap items-center justify-between gap-1.5">
+                <span class="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                  ${escapeHtml(rec.code)}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  ${isCloseMatchMode ? `
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-600 text-white">
+                      Padanan Hampir
                     </span>
-                  </div>
+                  ` : ''}
+                  <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold border ${catMeta.classes}">
+                    ${catMeta.label}
+                  </span>
                 </div>
-
-                <h3 class="font-bold text-sm sm:text-[15px] text-slate-900 leading-snug">
-                  ${escapeHtml(rec.desc)}
-                </h3>
-
-                ${hierarchy ? `
-                  <p class="text-[11px] font-medium text-slate-500 flex items-start gap-1">
-                    <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
-                    <span>${escapeHtml(hierarchy)}</span>
-                  </p>
-                ` : ''}
-
-                ${rec.detail ? `
-                  <p class="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    ${escapeHtml(rec.detail)}
-                  </p>
-                ` : ''}
               </div>
 
-              <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                <button onclick="openItemPreview(${globalIndex})"
-                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold transition cursor-pointer">
-                  <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                  <span>Gambar &amp; Butiran</span>
-                </button>
-                <button onclick="copyCode('${escapeHtml(rec.code)}')"
-                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer">
-                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                  <span>Salin Kod</span>
-                </button>
-              </div>
-            </article>
-          `;
-        }).join('');
-      } else {
-        cardContainer.classList.add('hidden');
-        tableContainer.classList.remove('hidden');
+              <!-- Perihal / Nama Item -->
+              <h2 class="font-bold text-sm sm:text-[15px] text-slate-900 leading-snug">
+                ${escapeHtml(rec.desc)}
+              </h2>
 
-        document.getElementById('tableBody').innerHTML = pageSlice.map((rec, idx) => {
-          const meta = getCategoryMeta(rec.cat);
-          const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ') || '-';
-          const globalIndex = startIdx + idx;
-          return `
-            <tr class="hover:bg-blue-50/40 transition">
-              <td class="py-3 px-4 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(rec.code)}</td>
-              <td class="py-3 px-4 whitespace-nowrap space-x-1">
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${meta.badgeClass}">${meta.label}</span>
-                ${isSmartMatchActive ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">✨ Padanan Hampir</span>` : ''}
-              </td>
-              <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(rec.desc)}</td>
-              <td class="py-3 px-4 text-slate-500 text-xs">${escapeHtml(hierarchy)}</td>
-              <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-                <button onclick="openItemPreview(${globalIndex})" title="Lihat Gambar & Butiran"
-                  class="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 transition cursor-pointer inline-flex">
-                  <i data-lucide="image" class="w-4 h-4"></i>
-                </button>
-                <button onclick="copyCode('${escapeHtml(rec.code)}')" title="Salin Kod"
-                  class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition cursor-pointer inline-flex items-center gap-1">
-                  <i data-lucide="copy" class="w-3 h-3"></i> Salin
-                </button>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
+              <!-- Hierarki Kelas -->
+              ${hierarchy ? `
+                <div class="text-[11px] font-medium text-slate-500 flex items-start gap-1.5">
+                  <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5"></i>
+                  <span>${escapeHtml(hierarchy)}</span>
+                </div>
+              ` : ''}
 
+              <!-- Butiran / Spesifikasi -->
+              ${rec.detail ? `
+                <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">
+                  ${escapeHtml(rec.detail)}
+                </p>
+              ` : ''}
+            </div>
+
+            <!-- Butang Salin Kod -->
+            <div class="pt-2 border-t border-slate-100 flex justify-end">
+              <button onclick="copyRecordCode('${escapeHtml(rec.code)}')"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold transition cursor-pointer">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Salin Kod</span>
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      loadMoreWrapper.classList.toggle('hidden', visibleCount >= total);
       lucide.createIcons();
     }
 
     // =========================================================================
-    // 6. OFFICIAL MOF IMAGE PREVIEW MODAL
+    // 4. TETAPAN AI & FUNGSI "TANYA AI" (GEMINI 2.5 FLASH)
     // =========================================================================
-    function openItemPreview(filteredIndex) {
-      const rec = filteredRecords[filteredIndex];
-      if (!rec) return;
-
-      const meta = getCategoryMeta(rec.cat);
-      const hierarchy = [rec.c1, rec.c2, rec.c3].filter(Boolean).join(' › ');
-
-      document.getElementById('modalItemCode').textContent = rec.code;
-      const catEl = document.getElementById('modalItemCat');
-      catEl.textContent = meta.label;
-      catEl.className = `px-2.5 py-1 rounded-lg text-xs font-bold border ${meta.badgeClass}`;
-      document.getElementById('modalItemDesc').textContent = rec.desc;
-      document.getElementById('modalItemHierarchy').textContent = hierarchy || 'Kategori Umum 1PP';
-
-      const detailBox = document.getElementById('modalItemDetailBox');
-      if (rec.detail) {
-        detailBox.textContent = rec.detail;
-        detailBox.classList.remove('hidden');
-      } else {
-        detailBox.classList.add('hidden');
-      }
-
-      document.getElementById('modalCopyBtn').onclick = () => copyCode(rec.code);
-
-      // Load official MOF image using item ID
-      const imgEl = document.getElementById('modalPreviewImg');
-      const fallbackEl = document.getElementById('modalImgFallback');
-      imgEl.classList.add('hidden');
-      fallbackEl.classList.add('hidden');
-
-      if (rec.id) {
-        const folder = rec.cat === 'STOK' ? 'stok' : 'asset';
-        imgEl.src = `https://knowledgebase.treasury.gov.my/kb_reference/images/${folder}/${encodeURIComponent(rec.id)}.png`;
-      } else {
-        fallbackEl.classList.remove('hidden');
-      }
-
-      openModal('imageModal');
+    function getSavedGeminiKey() {
+      return (localStorage.getItem('aras_gemini_api_key') || '').trim();
     }
 
-    // =========================================================================
-    // 7. GEMINI AI ASSISTANT (LAYER 2: TEXT SIMILARITY + VISION SCANNER)
-    // =========================================================================
-    function openAiModal(mode = 'TEXT', prefillQuery = '') {
-      const savedKey = localStorage.getItem('aras_gemini_api_key') || '';
-      document.getElementById('geminiApiKeyInput').value = savedKey;
-      document.getElementById('aiResultBox').classList.add('hidden');
-      switchAiTab(mode);
-
-      if (prefillQuery) {
-        document.getElementById('aiTextQueryInput').value = prefillQuery;
-      }
-
-      openModal('aiModal');
-
-      // Auto-trigger Gemini text analysis if user came from 0-result button and already saved API key
-      if (mode === 'TEXT' && prefillQuery && savedKey) {
-        askGeminiForSimilarItems();
+    function updateAiKeyIndicator() {
+      const dot = document.getElementById('aiKeyStatusDot');
+      if (getSavedGeminiKey()) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-500';
       }
     }
 
-    function switchAiTab(mode) {
-      const tabText = document.getElementById('tabAiText');
-      const tabCamera = document.getElementById('tabAiCamera');
-      const panelText = document.getElementById('aiTextPanel');
-      const panelCamera = document.getElementById('aiCameraPanel');
+    function openAiSettingsModal() {
+      document.getElementById('geminiKeyInput').value = getSavedGeminiKey();
+      document.getElementById('aiSettingsModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
 
-      if (mode === 'TEXT') {
-        tabText.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
-        tabCamera.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
-        panelText.classList.remove('hidden');
-        panelCamera.classList.add('hidden');
-      } else {
-        tabCamera.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition cursor-pointer';
-        tabText.className = 'flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition cursor-pointer';
-        panelCamera.classList.remove('hidden');
-        panelText.classList.add('hidden');
-      }
+    function closeAiSettingsModal() {
+      document.getElementById('aiSettingsModal').classList.add('hidden');
     }
 
     function saveGeminiKey() {
-      const key = document.getElementById('geminiApiKeyInput').value.trim();
-      if (!key) {
+      const val = document.getElementById('geminiKeyInput').value.trim();
+      if (!val) {
         showToast('Sila masukkan Kunci API Google Gemini yang sah.');
         return;
       }
-      localStorage.setItem('aras_gemini_api_key', key);
-      showToast('Kunci API Google Gemini berjaya disimpan!');
+      localStorage.setItem('aras_gemini_api_key', val);
+      updateAiKeyIndicator();
+      closeAiSettingsModal();
+      showToast('Kunci API Google Gemini berjaya disimpan.');
     }
 
-    async function askGeminiForSimilarItems() {
-      const query = document.getElementById('aiTextQueryInput').value.trim();
+    function clearGeminiKey() {
+      localStorage.removeItem('aras_gemini_api_key');
+      document.getElementById('geminiKeyInput').value = '';
+      updateAiKeyIndicator();
+      showToast('Kunci API telah dipadam.');
+    }
+
+    async function triggerAskAi() {
+      const query = document.getElementById('searchInput').value.trim();
       if (!query) {
-        showToast('Sila taip nama atau penerangan barang dahulu.');
-        document.getElementById('aiTextQueryInput').focus();
+        showToast('Sila taip nama barang dalam kotak carian dahulu.');
+        document.getElementById('searchInput').focus();
         return;
       }
 
-      const apiKey = (document.getElementById('geminiApiKeyInput').value || localStorage.getItem('aras_gemini_api_key') || '').trim();
+      const apiKey = getSavedGeminiKey();
       if (!apiKey) {
-        showToast('Sila masukkan Kunci API Google Gemini percuma anda di atas dahulu.');
-        document.getElementById('geminiApiKeyInput').focus();
+        openAiSettingsModal();
+        showToast('Sila masukkan Kunci API Gemini percuma anda dahulu.');
         return;
       }
 
-      const btn = document.getElementById('btnAskGeminiText');
-      const resultBox = document.getElementById('aiResultBox');
-      btn.disabled = true;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Menganalisis...`;
+      const panel = document.getElementById('aiResponsePanel');
+      const content = document.getElementById('aiResponseContent');
+      panel.classList.remove('hidden');
+      content.innerHTML = `
+        <div class="flex items-center gap-2 text-blue-700 font-medium py-2">
+          <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>
+          <span>Menganalisis pengelasan kod 1PP paling hampir untuk "${escapeHtml(query)}"...</span>
+        </div>
+      `;
       lucide.createIcons();
 
-      const prompt = `Anda ialah pakar pengurusan aset dan stor Kerajaan Malaysia merujuk 1Pekeliling Perbendaharaan (1PP) dan pangkalan data Knowledgebase Perbendaharaan (MOF).
+      const prompt = `Anda ialah pakar pengurusan aset dan stor Kerajaan Malaysia (1Pekeliling Perbendaharaan - 1PP) yang merujuk pangkalan data Perbendaharaan (MOF).
 Pengguna sedang mencari kod untuk barang: "${query}".
-Istilah ini mungkin tidak wujud secara tepat dalam senarai MOF. Berikan cadangan barang yang paling hampir serupa mengikut istilah rasmi Bahasa Melayu MOF.
-Jawab dalam format JSON sah sahaja:
+Berikan jawapan dalam format JSON sah sahaja seperti struktur berikut:
 {
-  "cadangan_kategori": "ASET ALIH atau STOK atau ASET TAK ALIH",
-  "penjelasan_1pp": "Penjelasan ringkas 1-2 ayat mengapa ia dikelaskan begitu dan apa padanan rasmi MOF paling hampir (contoh: induction cooker -> DAPUR ELEKTRIK)",
-  "kata_kunci_mof": ["KATA KUNCI 1", "KATA KUNCI 2", "KATA KUNCI 3", "KATA KUNCI 4"]
+  "kategori_1pp": "ASET ALIH atau STOK atau ASET TAK ALIH",
+  "penjelasan": "Penjelasan ringkas 1-2 ayat dalam Bahasa Melayu mengenai pengelasan 1PP dan padanan istilah rasmi MOF paling hampir.",
+  "kata_kunci_rasmi": ["KATA KUNCI 1", "KATA KUNCI 2", "KATA KUNCI 3"]
 }`;
 
       try {
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' }
-          })
-        });
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: 'application/json' }
+            })
+          }
+        );
 
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error?.message || 'Ralat panggilan Gemini API');
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || 'Gagal menghubungi pelayan Gemini AI');
+        }
 
         const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
         const parsed = JSON.parse(rawText);
-        const keywords = Array.isArray(parsed.kata_kunci_mof) ? parsed.kata_kunci_mof : [];
+        const keywords = Array.isArray(parsed.kata_kunci_rasmi) ? parsed.kata_kunci_rasmi.slice(0, 3) : [];
 
-        resultBox.innerHTML = `
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-extrabold text-blue-950 text-sm">Cadangan ARAS Pintar untuk "${escapeHtml(query)}"</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[11px] font-bold">${escapeHtml(parsed.cadangan_kategori || '1PP')}</span>
+        content.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-md bg-blue-600 text-white text-[11px] font-bold">
+              ${escapeHtml(parsed.kategori_1pp || 'Cadangan 1PP')}
+            </span>
+            <span class="text-xs text-slate-500">Carian asal: <strong>${escapeHtml(query)}</strong></span>
           </div>
-          <p class="text-blue-900 leading-relaxed">${escapeHtml(parsed.penjelasan_1pp || '')}</p>
-          <div class="space-y-1.5 pt-1">
-            <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Klik kata kunci rasmi MOF di bawah untuk terus papar kod:</div>
-            <div class="flex flex-wrap gap-1.5">
-              ${keywords.map((kw) => `
-                <button onclick="quickSearch('${escapeHtml(kw)}'); closeModal('aiModal');"
-                  class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition cursor-pointer inline-flex items-center gap-1">
-                  <i data-lucide="search" class="w-3 h-3"></i> ${escapeHtml(kw)}
-                </button>
-              `).join('')}
+          <p class="text-slate-700 leading-relaxed">${escapeHtml(parsed.penjelasan || '')}</p>
+          ${keywords.length > 0 ? `
+            <div class="pt-1 space-y-1.5">
+              <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Klik kata kunci rasmi untuk mencari kod:</div>
+              <div class="flex flex-wrap gap-2">
+                ${keywords.map((kw) => `
+                  <button onclick="applyAiSuggestedKeyword('${escapeHtml(kw)}')"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-xs font-bold transition cursor-pointer">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    <span>${escapeHtml(kw)}</span>
+                  </button>
+                `).join('')}
+              </div>
             </div>
-          </div>
+          ` : ''}
         `;
-        resultBox.classList.remove('hidden');
         lucide.createIcons();
       } catch (err) {
-        resultBox.innerHTML = `<div class="text-rose-700 font-semibold">Gagal mendapatkan cadangan AI: ${escapeHtml(err.message)}</div>`;
-        resultBox.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Tanya AI`;
-        lucide.createIcons();
-      }
-    }
-
-    function handleAiImageSelect(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      selectedAiImageMime = file.type || 'image/jpeg';
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        selectedAiImageBase64 = dataUrl.split(',')[1];
-        document.getElementById('aiImagePreview').src = dataUrl;
-        document.getElementById('aiImagePreviewWrapper').classList.remove('hidden');
-        document.getElementById('aiUploadPlaceholder').classList.add('hidden');
-        document.getElementById('btnAnalyzeAi').disabled = false;
-        document.getElementById('aiResultBox').classList.add('hidden');
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function analyzeImageWithGemini() {
-      const apiKey = (document.getElementById('geminiApiKeyInput').value || localStorage.getItem('aras_gemini_api_key') || '').trim();
-      if (!apiKey) {
-        showToast('Sila masukkan Kunci API Google Gemini percuma anda dahulu.');
-        document.getElementById('geminiApiKeyInput').focus();
-        return;
-      }
-      if (!selectedAiImageBase64) return;
-
-      const btn = document.getElementById('btnAnalyzeAi');
-      const resultBox = document.getElementById('aiResultBox');
-      btn.disabled = true;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Menganalisis...`;
-      lucide.createIcons();
-
-      const prompt = `Anda ialah pakar pengurusan aset dan stor Kerajaan Malaysia (1Pekeliling Perbendaharaan - 1PP).
-Kenal pasti objek utama dalam gambar ini dan jawab dalam format JSON sahaja:
-{
-  "nama_bm": "Nama rasmi barang dalam Bahasa Melayu (1-3 perkataan)",
-  "nama_en": "Nama barang dalam Bahasa Inggeris",
-  "cadangan_kategori": "ASET ALIH atau STOK atau ASET TAK ALIH",
-  "sebab": "Penerangan ringkas 1 ayat mengikut peraturan 1PP"
-}`;
-
-      try {
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: prompt },
-                { inline_data: { mime_type: selectedAiImageMime, data: selectedAiImageBase64 } }
-              ]
-            }],
-            generationConfig: { responseMimeType: 'application/json' }
-          })
-        });
-
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error?.message || 'Ralat panggilan Gemini API');
-
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const parsed = JSON.parse(rawText);
-
-        resultBox.innerHTML = `
-          <div class="font-bold text-blue-950 text-sm">Objek Dikesan: ${escapeHtml(parsed.nama_bm || '')} (${escapeHtml(parsed.nama_en || '')})</div>
-          <div class="text-blue-900"><strong>Cadangan 1PP:</strong> ${escapeHtml(parsed.cadangan_kategori || '')} &mdash; ${escapeHtml(parsed.sebab || '')}</div>
-          <div class="pt-1">
-            <button onclick="quickSearch('${escapeHtml(parsed.nama_bm || parsed.nama_en || '')}'); closeModal('aiModal');"
-              class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs cursor-pointer">
-              Cari "${escapeHtml(parsed.nama_bm || '')}" dalam ARAS &rarr;
-            </button>
+        content.innerHTML = `
+          <div class="text-rose-600 font-semibold">
+            Ralat: ${escapeHtml(err.message)}. Sila semak Kunci API anda di Tetapan AI.
           </div>
         `;
-        resultBox.classList.remove('hidden');
-      } catch (err) {
-        resultBox.innerHTML = `<div class="text-rose-700 font-semibold">Gagal menganalisis gambar: ${escapeHtml(err.message)}</div>`;
-        resultBox.classList.remove('hidden');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analisis Semula`;
-        lucide.createIcons();
       }
     }
 
-    // =========================================================================
-    // 8. MANUAL SQL FALLBACK PARSER (OPTIONAL) & CSV EXPORT
-    // =========================================================================
-    function handleManualSqlUpload(event, type) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      showToast(`Memproses fail ${file.name}...`);
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target.result;
-        const extracted = [];
-
-        if (type === 'ASET') {
-          const tuples = extractSqlTuples(text, 'code_005');
-          for (const r of tuples) {
-            if (!r[1] || !r[2]) continue;
-            const upper = r[2].toUpperCase();
-            const cat = upper.includes('ASET TAK ALIH') ? 'ASET_TAK_ALIH' :
-                        upper.includes('ASET TAK KETARA') ? 'ASET_TAK_KETARA' :
-                        upper.includes('(STOK)') ? 'STOK' : 'ASET_ALIH';
-            extracted.push({
-              id: r[0],
-              code: r[1].trim(),
-              desc: r[2].trim(),
-              cat,
-              c1: r[3] || '',
-              c2: '',
-              detail: (r[10] || '').replace(/<[^>]*>/g, ' ').trim()
-            });
-          }
-          const nonAset = allRecords.filter((x) => x.cat === 'STOK');
-          allRecords = [...extracted, ...nonAset];
-        } else {
-          const tuples = extractSqlTuples(text, 'sps_stok_class4');
-          for (const r of tuples) {
-            if (!r[2]) continue;
-            extracted.push({
-              id: r[0],
-              code: (r[6] || `${r[3]}${r[4]}${r[5]}${r[1]}`).trim(),
-              desc: r[2].trim(),
-              cat: 'STOK',
-              c1: r[3] || '',
-              c2: r[4] || '',
-              detail: (r[21] || '').replace(/<[^>]*>/g, ' ').trim()
-            });
-          }
-          const nonStok = allRecords.filter((x) => x.cat !== 'STOK');
-          allRecords = [...nonStok, ...extracted];
-        }
-
-        const payload = {
-          updated_at: `Manual (${new Date().toLocaleDateString('ms-MY')})`,
-          aset_source: type === 'ASET' ? file.name : metadataInfo.aset_source,
-          stok_source: type === 'STOK' ? file.name : metadataInfo.stok_source,
-          total: allRecords.length,
-          records: allRecords
-        };
-        await saveToCache(payload);
-        applyDataset(payload, false);
-        showToast(`Berjaya memuat naik ${extracted.length.toLocaleString()} rekod daripada ${file.name}!`);
-      };
-      reader.readAsText(file, 'ISO-8859-1');
-    }
-
-    function extractSqlTuples(sql, table) {
-      const results = [];
-      const regex = new RegExp(`INSERT INTO \`${table}\` VALUES\\s*`, 'gi');
-      let match;
-      while ((match = regex.exec(sql)) !== null) {
-        let i = match.index + match[0].length;
-        while (i < sql.length) {
-          while (i < sql.length && /[\s,]/.test(sql[i])) i++;
-          if (sql[i] === ';' || i >= sql.length) break;
-          if (sql[i] !== '(') { i++; continue; }
-          i++;
-          const row = [];
-          let cur = '';
-          let inStr = false;
-          while (i < sql.length) {
-            const ch = sql[i];
-            if (inStr) {
-              if (ch === '\\' && i + 1 < sql.length) { cur += sql[i + 1]; i += 2; continue; }
-              if (ch === "'" && sql[i + 1] === "'") { cur += "'"; i += 2; continue; }
-              if (ch === "'") inStr = false;
-              else cur += ch;
-            } else {
-              if (ch === "'") inStr = true;
-              else if (ch === ',') { row.push(cur.trim() === 'NULL' ? '' : cur.trim()); cur = ''; }
-              else if (ch === ')') { row.push(cur.trim() === 'NULL' ? '' : cur.trim()); results.push(row); i++; break; }
-              else cur += ch;
-            }
-            i++;
-          }
-        }
-      }
-      return results;
-    }
-
-    function exportToCSV() {
-      if (filteredRecords.length === 0) {
-        showToast('Tiada rekod untuk dieksport.');
-        return;
-      }
-      const headers = ['Kod 1PP', 'Kategori', 'Perihal / Nama Item', 'Kelas 1', 'Kelas 2', 'Kelas 3'];
-      const lines = [headers.join(',')];
-      for (const r of filteredRecords) {
-        const meta = getCategoryMeta(r.cat);
-        const row = [r.code, meta.label, r.desc, r.c1 || '', r.c2 || '', r.c3 || '']
-          .map((v) => `"${String(v).replace(/"/g, '""')}"`);
-        lines.push(row.join(','));
-      }
-      const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ARAS_Senarai_Kod_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast(`Dieksport ${filteredRecords.length.toLocaleString()} rekod ke CSV.`);
+    function applyAiSuggestedKeyword(keyword) {
+      const input = document.getElementById('searchInput');
+      input.value = keyword;
+      runSearchAndFilter();
     }
 
     // =========================================================================
-    // 9. UTILITIES (MODALS, CLIPBOARD, TOAST, ESCAPE)
+    // 5. UTILITI SALIN KOD, TOAST & KESELAMATAN HTML
     // =========================================================================
-    function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
-      lucide.createIcons();
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-    }
-
-    function openStatusModal() {
-      openModal('statusModal');
-    }
-
-    function copyCode(codeText) {
-      const ta = document.createElement('textarea');
-      ta.value = codeText;
-      document.body.appendChild(ta);
-      ta.select();
+    function copyRecordCode(code) {
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      document.body.appendChild(textarea);
+      textarea.select();
       document.execCommand('copy');
-      document.body.removeChild(ta);
-      showToast(`Kod "${codeText}" berjaya disalin!`);
+      document.body.removeChild(textarea);
+      showToast(`Kod "${code}" berjaya disalin!`);
     }
 
-    let toastTimer = null;
-    function showToast(message) {
+    let toastTimeout = null;
+    function showToast(msg) {
       const toast = document.getElementById('toast');
-      document.getElementById('toastMsg').textContent = message;
+      document.getElementById('toastMessage').textContent = msg;
       toast.classList.remove('translate-y-20', 'opacity-0');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2800);
+      }, 2600);
     }
 
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      return String(text)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1633,10 +795,10 @@ Kenal pasti objek utama dalam gambar ini dan jawab dalam format JSON sahaja:
         .replace(/'/g, '&#39;');
     }
 
-    // Start Application
+    // Mulakan Aplikasi
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
-      initAppData();
+      loadTreasuryData();
     });
   </script>
 </body>
