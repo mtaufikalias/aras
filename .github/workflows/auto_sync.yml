@@ -1,32 +1,37 @@
-name: Auto Kemaskini Kod Treasury MOF
+name: Kemas Kini Data & Vektor AI ARAS
 
 on:
   schedule:
-    - cron: '0 18 * * *' # Berjalan setiap hari jam 2:00 pagi waktu Malaysia
-  workflow_dispatch:      # Membolehkan anda tekan butang Run secara manual bila-bila masa
+    - cron: '0 19 * * *' # Jalan automatik setiap hari jam 3:00 AM waktu Malaysia
+  workflow_dispatch:      # Membolehkan jalan secara manual bila-bila masa
 
 permissions:
   contents: write
 
 jobs:
-  update-data:
+  build-and-index:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repositori
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Sediakan Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-      - name: Jalankan skrip ambil data MOF
-        run: python scripts/update_data.py
-
-      - name: Simpan data terkini ke repo
+      - name: Pasang pustaka keperluan
         run: |
-          git config user.name "GitHub Action Bot"
-          git config user.email "bot@github.com"
-          git add data_terkini.json
-          git diff --staged --quiet || git commit -m "Auto-kemaskini kod aset & stok terkini"
-          git push
+          pip install requests beautifulsoup4 sentence-transformers numpy
+
+      - name: Tarik data MOF & Jana Vektor AI
+        run: |
+          python scripts/update_data.py
+
+      - name: Simpan perubahan ke repositori
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data_terkini.json vectors.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-kemas kini data MOF & indeks vektor AI" && git push)
